@@ -1,0 +1,7 @@
+FROM mdillon/postgis:9.5-alpine
+
+RUN mkdir -p /var/run/postgresql/9.5-main.pg_stat_tmp
+RUN chown postgres:postgres /var/run/postgresql/9.5-main.pg_stat_tmp -R
+
+# copy init script so it will run automatically after startup
+COPY ./init.sql /docker-entrypoint-initdb.d/

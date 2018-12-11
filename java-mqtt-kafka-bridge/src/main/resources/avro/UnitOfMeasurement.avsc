@@ -1,0 +1,11 @@
+{
+	"namespace": "pw.oliver.jmkb.avroclasses",
+	"type": "record",
+	"name": "UnitOfMeasurement",
+	"doc": "The Unit of Measurement of an Observation",
+	"fields": [
+		{"name": "name", "type": "string", "doc": "String representation of the Unit of Measurement"},
+		{"name": "symbol", "type": "string", "doc": "Symbol of the Unit of Measurement"},
+		{"name": "definition", "type": "string", "doc": "Definition of the Unit of Measurement"}
+	]
+}

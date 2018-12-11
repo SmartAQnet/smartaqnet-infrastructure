@@ -1,0 +1,14 @@
+{
+	"namespace": "pw.oliver.jmkb.avroclasses",
+	"type": "record",
+	"name": "Location",
+	"doc": "A Things Location entity is defined as the last known location of the Thing. A Thing can have multiple Locations if all Locations are different representations of same Location with different encodingType.",
+	"fields": [
+		{"name": "iotId", "type": "string", "doc": "iotId of this Location"},
+		{"name": "name", "type": "string", "doc": "Name of the Location"},
+		{"name": "description", "type": "string", "doc": "Description of the Location"},
+		{"name": "encodingType", "type": "string", "doc": "Representation/encoding type of the Location"},
+		{"name": "location", "type": "LocationType", "doc": "LocationType containing the actual location of the Thing"},
+		{"name": "Things", "type": ["null", "string"], "doc": "Things associated with this Location"}
+	]
+}

@@ -1,0 +1,13 @@
+{
+	"namespace": "pw.oliver.jmkb.avroclasses",
+	"type": "record",
+	"name": "Thing",
+	"doc": "A Thing has Locations and one or more Datastreams to collect Observations.",
+	"fields": [
+		{"name": "iotId", "type": "string", "doc": "iotId of this Thing"},
+		{"name": "name", "type": "string", "doc": "Name of the Thing"},
+		{"name": "description", "type": "string", "doc": "Description of the Thing"},
+		{"name": "Locations", "type": ["null", "string"], "doc": "Optional Location(s) of the Thing"},
+		{"name": "Datastreams", "type": ["null", "string"], "doc": "Optional Datastream(s) of the Thing"}
+	]
+}
