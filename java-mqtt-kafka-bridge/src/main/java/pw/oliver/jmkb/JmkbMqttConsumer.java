@@ -2,7 +2,7 @@ package pw.oliver.jmkb;
 
 import org.apache.avro.specific.SpecificRecordBase;
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
-import org.eclipse.paho.client.mqttv3.MqttCallback;
+import org.eclipse.paho.client.mqttv3.MqttCallbackExtended;
 import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
@@ -21,7 +21,7 @@ import org.slf4j.LoggerFactory;
  * 
  * @author Oliver
  */
-public class JmkbMqttConsumer implements MqttCallback {
+public class JmkbMqttConsumer implements MqttCallbackExtended {
 
 	private Logger logger = LoggerFactory.getLogger(this.getClass());
 	
@@ -33,8 +33,8 @@ public class JmkbMqttConsumer implements MqttCallback {
 	
 	/**
 	 * The constructor for an AvroProducer
-     * @param clientId The unique String identifier of this clientId.
-     * @param producer The JmkbKafkaProducer at which the received message should be sent
+	 * @param clientId The unique String identifier of this clientId.
+	 * @param producer The JmkbKafkaProducer at which the received message should be sent
 	 */
 	public <T> JmkbMqttConsumer(String clientId, JmkbKafkaProducer<T> producer) {
 		this.format = PropertiesFileReader.getProperty("format");
@@ -49,11 +49,14 @@ public class JmkbMqttConsumer implements MqttCallback {
 			String frostServerURI = PropertiesFileReader.getProperty("frostServerURI");
 			
 			MqttConnectOptions options = new MqttConnectOptions();
-			options.setCleanSession(true);
+			options.setCleanSession(false);
+			options.setAutomaticReconnect(true);
+			options.setKeepAliveInterval(30);
+			options.setConnectionTimeout(30);
 			this.client = new MqttClient(frostServerURI, clientId);
 			client.setCallback(this);
 			client.connect(options);
-			logger.info("{} successfully connected to MQTT", clientId);
+
 			client.subscribe("v1.0/Things");
 			client.subscribe("v1.0/Datastreams");
 			client.subscribe("v1.0/Locations");
@@ -65,20 +68,34 @@ public class JmkbMqttConsumer implements MqttCallback {
 			logger.info("{} successfully subscribed to topics", clientId);
 		} catch (MqttException e) {
 			logger.warn("Could not initialize MQTT client {}", clientId, e);
+			System.exit(-1);
 		}
+	}
+
+	@Override
+	public void connectComplete(boolean reconnect, java.lang.String serverURI) {
+		if (reconnect)
+			logger.info("{} successfully reconnected", clientId);
+		else
+			logger.info("{} successfully connected to MQTT", clientId);
 	}
 
 	@Override
 	public void connectionLost(Throwable cause) {
 		logger.warn("{} lost connection to MQTT", clientId);
+		// wait for auto reconnection
 		try {
-			// prevent spamming connect() on connection loss
-			Thread.sleep(3000);
-		} catch (InterruptedException e) {
-			Thread.currentThread().interrupt();
+			Thread.sleep(30000);
+		} catch (InterruptedException ex) {
 			logger.debug("{} received interrupt while waiting for reconnect", clientId);
+			System.exit(-1);
 		}
-		connect();
+
+		if (!client.isConnected()) {
+			// auto reconnection fails; terminate and wait for restart
+			logger.warn("Could not reconnect; terminating the program");
+			System.exit(1);
+		}
 	}
 
 	@Override
