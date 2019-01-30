@@ -186,16 +186,39 @@ public class MqttMessageConverter {
 			JsonObject jo = new JsonParser().parse(new String(message.getPayload())).getAsJsonObject();
 			JsonObject joNew = jo.deepCopy();
 			
-			for (Entry<String, JsonElement> entry : jo.entrySet()) {
-				if (entry.getKey().endsWith("@iot.navigationLink")) {
-					joNew.remove(entry.getKey());
-					// remove @iot.navigationLink from key
-					String newKey = entry.getKey().split("@")[0];
-					String newValue = conv.getIotIds(entry.getValue().getAsString());
-					if (newValue != null) {
-						joNew.addProperty(newKey, newValue);
+			//partially expand observation (only location aka FeatureOfInterest)
+			if(messageTopic.equals("Observations"))
+				for (Entry<String, JsonElement> entry : jo.entrySet()) {
+					if (entry.getKey().equals("FeatureOfInterest@iot.navigationLink")) {
+						JsonObject newValue = conv.getJsonObjectFromNavigationLink(entry.getValue().getAsString());
+						if (newValue != null) {
+							joNew.remove(entry.getKey());
+							String newKey = entry.getKey().split("@")[0];
+							joNew.add(newKey, newValue);
+						}
 					}
 				}
+
+			for (Entry<String, JsonElement> entry : jo.entrySet()) {
+				if (entry.getKey().endsWith("@iot.navigationLink")) {
+					// replace @iot.navigationLink with @iot.id
+					String key = entry.getKey().split("@")[0];
+					if(key.endsWith("s"))
+					{
+						joNew.remove(entry.getKey());
+					}
+					else
+					{
+						String newKey = key+"@iot.id";
+						String newValue = conv.getIotIds(entry.getValue().getAsString());
+						if (newValue != null) {
+							joNew.remove(entry.getKey());
+							joNew.addProperty(newKey, newValue);
+						}
+					}
+				}
+				else if (entry.getKey().equals("@iot.selfLink"))
+							joNew.remove(entry.getKey());
 			}
 
 			return new Gson().toJson(joNew);
@@ -204,7 +227,7 @@ public class MqttMessageConverter {
 		}
 		return null;
 	}
-	
+
 	public String getKeyFromMessage(MqttMessage message) {
 		try {
 			return String.valueOf(((JsonObject) new JsonParser().parse(new String(message.getPayload()))).get("@iot.id"));

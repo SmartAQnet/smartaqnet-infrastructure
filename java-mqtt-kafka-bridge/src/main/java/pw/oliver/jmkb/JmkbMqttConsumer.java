@@ -45,7 +45,10 @@ public class JmkbMqttConsumer implements MqttCallbackExtended {
 	}
 	
 	private void connect() {
+		int max_retries=10;
+		for(int retries=0;;retries++)
 		try {
+			if(retries>0)Thread.sleep(30000); 
 			String frostServerURI = PropertiesFileReader.getProperty("frostServerURI");
 			
 			MqttConnectOptions options = new MqttConnectOptions();
@@ -66,10 +69,12 @@ public class JmkbMqttConsumer implements MqttCallbackExtended {
 			client.subscribe("v1.0/FeaturesOfInterest");
 			client.subscribe("v1.0/Observations");
 			logger.info("{} successfully subscribed to topics", clientId);
+			break;
 		} catch (MqttException e) {
 			logger.warn("Could not initialize MQTT client {}", clientId, e);
-			System.exit(-1);
+			if (retries > max_retries) System.exit(-1);
 		}
+		catch (InterruptedException e){  Thread.currentThread().interrupt();} // restore interrupted status 
 	}
 
 	@Override

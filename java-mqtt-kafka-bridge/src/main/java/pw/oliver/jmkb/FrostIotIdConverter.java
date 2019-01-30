@@ -38,7 +38,7 @@ public class FrostIotIdConverter {
 		}
 		JsonObject jo = getJsonObjectFromNavigationLink(link);
 		if (jo == null) {
-			return null;
+			return link;
 		}
 		if (jo.has("@iot.id")) {
 			// only a single @iot.id available
@@ -53,11 +53,11 @@ public class FrostIotIdConverter {
 			}
 			return String.join(",", ll);
 		} else {
-			return null;
+			return link;
 		}
 	}
 
-	private JsonObject getJsonObjectFromNavigationLink(String link) {
+	public JsonObject getJsonObjectFromNavigationLink(String link) {
 		try {
 			URL url = new URL(link);
 			HttpURLConnection conn = (HttpURLConnection) url.openConnection();

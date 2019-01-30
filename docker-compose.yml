@@ -1,38 +1,55 @@
 version: '3'
 
 services:
-  frost:
-    build:
-        context: ./FROST-Server
-        dockerfile: Dockerfile_web
-        args:
-          GITHASH: v1.8
-    environment:
-      - serviceRootUrl=http://localhost:8080/FROST-Server 
-      - persistence_persistenceManagerImplementationClass=de.fraunhofer.iosb.ilt.sta.persistence.postgres.stringid.PostgresPersistenceManagerString
-      - persistence_idGenerationMode=ServerAndClientGenerated
-    restart: unless-stopped
-    ports:
-      - 8080:8080
-    depends_on:
-      - database
-      
-  database:
-    build:
-      context: ./FROST-Server
-      dockerfile: Dockerfile_db
-    restart: unless-stopped
-    environment:
-      - POSTGRES_DB=sensorthings
-      - POSTGRES_USER=sensorthings
-      - POSTGRES_PASSWORD=ChangeMe
-    volumes:
-      - ./FROST-Server/postgres_data/:/var/lib/postgresql/data
+    frost:
+        image: fraunhoferiosb/frost-server:1.9
+            #        build:
+            #            context: ./FROST-Server
+            #            dockerfile: Dockerfile_web
+            #            args:
+            #               GITHASH: v1.8
+        environment:
+          - serviceRootUrl=${FROST_SELF_URL}
+          - persistence_persistenceManagerImplementationClass=de.fraunhofer.iosb.ilt.sta.persistence.postgres.stringid.PostgresPersistenceManagerString
+          - persistence_idGenerationMode=ServerAndClientGenerated
+          - persistence_db_driver=org.postgresql.Driver
+          - persistence_db_url=jdbc:postgresql://database:5432/sensorthings
+          - persistence_db_username=sensorthings
+          - persistence_db_password=ChangeMe
+          - http_cors_enable=true 
+        restart: unless-stopped
+        ports:
+            - 8080:8080
+            - 1883:1883
+        depends_on:
+            - database
 
-  bridge:
-    build:
-      context: ./java-mqtt-kafka-bridge
-      dockerfile: Dockerfile
-    restart: unless-stopped
-    depends_on:
-      - frost
+    database:
+        build:
+            context: ./FROST-Server
+            dockerfile: Dockerfile_db
+        restart: unless-stopped
+        environment:
+            - POSTGRES_DB=sensorthings
+            - POSTGRES_USER=sensorthings
+            - POSTGRES_PASSWORD=ChangeMe
+
+    bridge:
+        build:
+            context: ./java-mqtt-kafka-bridge
+            dockerfile: Dockerfile
+        restart: unless-stopped
+        depends_on:
+            - kafka
+            - frost
+
+    kafka:
+       image: landoop/fast-data-dev 
+       environment:
+           - SAMPLEDATA=0
+           - RUNTESTS=0
+           - ADV_HOST=kafka
+       ports:
+           - 3030:3030
+           - 2181:2181
+           - 9092:9092
