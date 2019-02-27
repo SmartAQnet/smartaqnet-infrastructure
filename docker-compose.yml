@@ -26,7 +26,7 @@ services:
 
     database:
         build:
-            context: ./FROST-Server
+            context: ./Frost-Server
             dockerfile: Dockerfile_db
         restart: unless-stopped
         environment:
@@ -48,7 +48,7 @@ services:
        environment:
            - SAMPLEDATA=0
            - RUNTESTS=0
-           - ADV_HOST=kafka
+           - ADV_HOST=${FROST_HOST}
        ports:
            - 3030:3030
            - 2181:2181
