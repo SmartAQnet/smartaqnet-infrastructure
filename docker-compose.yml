@@ -17,6 +17,9 @@ services:
           - persistence_db_username=sensorthings
           - persistence_db_password=ChangeMe
           - http_cors_enable=true 
+          - defaultTop=1000
+          - maxTop=2147483647
+            #          - useAbsoluteNavigationLinks=false
         restart: unless-stopped
         ports:
             - 8080:8080
@@ -53,3 +56,12 @@ services:
            - 3030:3030
            - 2181:2181
            - 9092:9092
+    
+    nginx:
+       build: ./nginx
+       ports:
+         - 80:80
+       environment:
+         - NGINX_HOST=${FROST_HOST}
+       depends_on:
+         - frost
