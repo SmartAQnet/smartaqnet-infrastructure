@@ -17,6 +17,9 @@ services:
           - persistence_db_username=sensorthings
           - persistence_db_password=ChangeMe
           - http_cors_enable=true 
+          - defaultTop=1000
+          - maxTop=2147483647
+            #          - useAbsoluteNavigationLinks=false
         restart: unless-stopped
         ports:
             - 8080:8080
@@ -26,7 +29,7 @@ services:
 
     database:
         build:
-            context: ./FROST-Server
+            context: ./Frost-Server
             dockerfile: Dockerfile_db
         restart: unless-stopped
         environment:
@@ -48,7 +51,7 @@ services:
        environment:
            - SAMPLEDATA=0
            - RUNTESTS=0
-           - ADV_HOST=kafka
+           - ADV_HOST=${FROST_HOST}
        ports:
            - 3030:3030
            - 2181:2181
@@ -68,3 +71,13 @@ services:
 
 volumes: 
         openelevation-data:
+    
+    nginx:
+       build: ./nginx
+       ports:
+         - 80:80
+       environment:
+         - NGINX_HOST=${FROST_HOST}
+       depends_on:
+         - frost
+         - openelevation
