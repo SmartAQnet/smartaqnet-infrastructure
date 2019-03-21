@@ -3,11 +3,11 @@ version: '3'
 services:
     frost:
         image: fraunhoferiosb/frost-server:1.9
-            #        build:
-            #            context: ./FROST-Server
-            #            dockerfile: Dockerfile_web
-            #            args:
-            #               GITHASH: v1.8
+#        build:
+#            context: ./FROST-Server
+#            dockerfile: Dockerfile_web
+#            args:
+#               GITHASH: v1.9
         environment:
           - serviceRootUrl=${FROST_SELF_URL}
           - persistence_persistenceManagerImplementationClass=de.fraunhofer.iosb.ilt.sta.persistence.postgres.stringid.PostgresPersistenceManagerString
@@ -19,11 +19,12 @@ services:
           - http_cors_enable=true 
           - defaultTop=1000
           - maxTop=2147483647
-            #          - useAbsoluteNavigationLinks=false
+#          - useAbsoluteNavigationLinks=false
         restart: unless-stopped
         ports:
             - 8080:8080
             - 1883:1883
+            - 9876:9876
         depends_on:
             - database
 
@@ -32,6 +33,8 @@ services:
             context: ./Frost-Server
             dockerfile: Dockerfile_db
         restart: unless-stopped
+        volumes:
+            - database-data:/var/lib/postgresql/data
         environment:
             - POSTGRES_DB=sensorthings
             - POSTGRES_USER=sensorthings
@@ -56,22 +59,24 @@ services:
            - 3030:3030
            - 2181:2181
            - 9092:9092
-
-    openelevation:
-       image: openelevation/open-elevation 
        volumes:
-               - openelevation-data:/code/data
+           - kafka-data:/data
 
-    openelevation-init:
-       image: openelevation/open-elevation 
-       volumes:
-               - openelevation-data:/code/data
-       command: ["/code/create-dataset.sh"]
-       
-
-volumes: 
-        openelevation-data:
-    
+#    openelevation:
+#       build:
+#            context: ./open-elevation
+#            dockerfile: docker/Dockerfile
+#       volumes:
+#               - openelevation-data:/code/data
+#
+#    openelevation-init:
+#       build:
+#            context: ./open-elevation
+#            dockerfile: docker/Dockerfile
+#       volumes:
+#               - openelevation-data:/code/data
+#       command: ["/code/create-dataset.sh"]
+#
     nginx:
        build: ./nginx
        ports:
@@ -80,4 +85,10 @@ volumes:
          - NGINX_HOST=${FROST_HOST}
        depends_on:
          - frost
-         - openelevation
+#        - openelevation
+       
+
+volumes: 
+        database-data:
+        kafka-data:
+#        openelevation-data:
