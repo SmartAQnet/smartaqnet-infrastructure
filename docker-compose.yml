@@ -3,11 +3,6 @@ version: '3'
 services:
     frost:
         image: fraunhoferiosb/frost-server:1.9
-#        build:
-#            context: ./FROST-Server
-#            dockerfile: Dockerfile_web
-#            args:
-#               GITHASH: v1.9
         environment:
           - serviceRootUrl=${FROST_SELF_URL}
           - persistence_persistenceManagerImplementationClass=de.fraunhofer.iosb.ilt.sta.persistence.postgres.stringid.PostgresPersistenceManagerString
@@ -19,7 +14,6 @@ services:
           - http_cors_enable=true 
           - defaultTop=1000
           - maxTop=2147483647
-#          - useAbsoluteNavigationLinks=false
         restart: unless-stopped
         ports:
             - 8080:8080
@@ -62,33 +56,34 @@ services:
        volumes:
            - kafka-data:/data
 
-#    openelevation:
-#       build:
-#            context: ./open-elevation
-#            dockerfile: docker/Dockerfile
-#       volumes:
-#               - openelevation-data:/code/data
-#
-#    openelevation-init:
-#       build:
-#            context: ./open-elevation
-#            dockerfile: docker/Dockerfile
-#       volumes:
-#               - openelevation-data:/code/data
-#       command: ["/code/create-dataset.sh"]
-#
     nginx:
-       build: ./nginx
+       build: 
+            context: ./nginx
+            dockerfile: Dockerfile
        ports:
          - 80:80
+         - 443:443
        environment:
          - NGINX_HOST=${FROST_HOST}
        depends_on:
          - frost
-#        - openelevation
-       
+         - certbot
+       restart: unless-stopped
+       volumes:
+          - letsencrypt-conf:/etc/letsencrypt
+          - letsencrypt-data:/var/www/certbot
+       command: "/bin/sh -c 'while :; do sleep 6h & wait $${!}; nginx -s reload; done & nginx -g \"daemon off;\"'"
+
+    certbot:
+               image: certbot/certbot
+               restart: unless-stopped
+               volumes:
+                       - letsencrypt-conf:/etc/letsencrypt
+                       - letsencrypt-data:/var/www/certbot
+               entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
 
 volumes: 
+        letsencrypt-data:
+        letsencrypt-conf:
         database-data:
         kafka-data:
-#        openelevation-data:
