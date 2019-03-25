@@ -16,9 +16,7 @@ services:
           - maxTop=2147483647
         restart: unless-stopped
         ports:
-            - 8080:8080
             - 1883:1883
-            - 9876:9876
         depends_on:
             - database
 
@@ -51,6 +49,10 @@ services:
            - ADV_HOST=${FROST_HOST}
        ports:
            - 3030:3030
+           - 3031:3031
+           - 8081:8081
+           - 8082:8082
+           - 8083:8083
            - 2181:2181
            - 9092:9092
        volumes:
@@ -68,11 +70,15 @@ services:
        depends_on:
          - frost
          - certbot
+         - kafka
        restart: unless-stopped
        volumes:
           - letsencrypt-conf:/etc/letsencrypt
           - letsencrypt-data:/var/www/certbot
-       command: "/bin/sh -c 'while :; do sleep 6h & wait $${!}; nginx -s reload; done & nginx -g \"daemon off;\"'"
+       command: "/bin/sh -c 'ln -sfn ${FROST_HOST} /etc/letsencrypt/live/default && nginx -g \"daemon off;\"'"
+       healthcheck:
+          test: ["CMD","nginx","-s","reload","||","exit","1"]
+          interval: 6h
 
     certbot:
                image: certbot/certbot
@@ -80,7 +86,7 @@ services:
                volumes:
                        - letsencrypt-conf:/etc/letsencrypt
                        - letsencrypt-data:/var/www/certbot
-               entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
+               entrypoint: "/bin/sh -c 'certbot renew; sleep 12h;'"
 
 volumes: 
         letsencrypt-data:
