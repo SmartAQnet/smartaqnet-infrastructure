@@ -1,0 +1,2 @@
+#!/bin/sh -l
+#rbd showmapped|tail -n +2 |awk "{system(sprintf(\"rbd --pool %s snap create %s@%s\",\$2,\$3,\"`date --iso-8601=minutes`\"))}"
