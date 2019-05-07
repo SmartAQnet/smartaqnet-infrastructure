@@ -1,6 +1,8 @@
 [submodule "java-mqtt-kafka-bridge"]
 	path = java-mqtt-kafka-bridge
 	url = git@github.com:SmartAQnet/java-mqtt-kafka-bridge.git
+	branch = .
 [submodule "nginx"]
 	path = nginx
 	url = git@github.com:SmartAQnet/smartAQnet.github.io.git
+	branch = .
