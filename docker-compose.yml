@@ -27,7 +27,7 @@ services:
             dockerfile: Dockerfile_db
         restart: unless-stopped
         volumes:
-            - /media/vdb/data:/var/lib/postgresql/data
+            - database-data:/var/lib/postgresql/data
         environment:
             - POSTGRES_DB=sensorthings
             - POSTGRES_USER=sensorthings
