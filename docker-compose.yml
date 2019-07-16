@@ -4,7 +4,7 @@ services:
     frost:
         image: fraunhoferiosb/frost-server:1.9
         environment:
-          - serviceRootUrl=${FROST_SELF_URL}
+                #          - serviceRootUrl=${FROST_SELF_URL}
           - persistence_persistenceManagerImplementationClass=de.fraunhofer.iosb.ilt.sta.persistence.postgres.stringid.PostgresPersistenceManagerString
           - persistence_idGenerationMode=ServerAndClientGenerated
           - persistence_db_driver=org.postgresql.Driver
@@ -32,8 +32,8 @@ services:
             - POSTGRES_DB=sensorthings
             - POSTGRES_USER=sensorthings
             - POSTGRES_PASSWORD=ChangeMe
-        ports:
-            - 5432:5432
+              #        ports:
+                #            - 5432:5432
     nginx:
        build: 
             context: ./nginx
@@ -41,29 +41,29 @@ services:
        ports:
          - 80:80
          - 443:443
-       environment:
-         - NGINX_HOST=${FROST_HOST}
+           #       environment:
+               #         - NGINX_HOST=${FROST_HOST}
        depends_on:
          - frost
-         - certbot
+           #         - certbot
        restart: unless-stopped
-       volumes:
-          - letsencrypt-conf:/etc/letsencrypt
-          - letsencrypt-data:/var/www/certbot
-       command: "/bin/sh -c 'ln -sfn ${FROST_HOST} /etc/letsencrypt/live/default && nginx -g \"daemon off;\"'"
-       healthcheck:
-          test: ["CMD","nginx","-s","reload","||","exit","1"]
-          interval: 6h
+       #       volumes:
+               #          - letsencrypt-conf:/etc/letsencrypt
+               #          - letsencrypt-data:/var/www/certbot
+               #       command: "/bin/sh -c 'ln -sfn ${FROST_HOST} /etc/letsencrypt/live/default && nginx -g \"daemon off;\"'"
+               #       healthcheck:
+               #          test: ["CMD","nginx","-s","reload","||","exit","1"]
+               #          interval: 6h
 
-    certbot:
-               image: certbot/certbot
-               restart: unless-stopped
-               volumes:
-                       - letsencrypt-conf:/etc/letsencrypt
-                       - letsencrypt-data:/var/www/certbot
-               entrypoint: "/bin/sh -c 'certbot renew; sleep 12h;'"
+       #    certbot:
+       #               image: certbot/certbot
+       #               restart: unless-stopped
+       #               volumes:
+       #                       - letsencrypt-conf:/etc/letsencrypt
+       #                       - letsencrypt-data:/var/www/certbot
+       #               entrypoint: "/bin/sh -c 'certbot renew; sleep 12h;'"
 
 volumes: 
-        letsencrypt-data:
-        letsencrypt-conf:
+#        letsencrypt-data:
+#        letsencrypt-conf:
         database-data:
