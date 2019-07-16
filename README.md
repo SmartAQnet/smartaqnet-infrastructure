@@ -1,4 +1,4 @@
-Clone using `$git clone --recursive git@github.com:SmartAQnet/frost-bridge.git` (you need to setup ssh key at github)
+Clone using `$git clone --recursive ` (you need to setup ssh key at github)
 
 ## Prerequisites
 * docker-compose
