@@ -17,6 +17,7 @@ services:
         restart: unless-stopped
         ports:
             - 1883:1883
+            - 8080:8080
         depends_on:
             - database
 
@@ -26,11 +27,13 @@ services:
             dockerfile: Dockerfile_db
         restart: unless-stopped
         volumes:
-            - database-data:/var/lib/postgresql/data
+            - /media/vdb/data:/var/lib/postgresql/data
         environment:
             - POSTGRES_DB=sensorthings
             - POSTGRES_USER=sensorthings
             - POSTGRES_PASSWORD=ChangeMe
+        ports:
+            - 5432:5432
     nginx:
        build: 
             context: ./nginx
