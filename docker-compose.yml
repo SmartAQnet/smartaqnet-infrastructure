@@ -3,67 +3,43 @@ version: '3'
 services:
     frost:
         image: fraunhoferiosb/frost-server:1.9
+        container_name: frost
+        restart: unless-stopped
         environment:
           - serviceRootUrl=${FROST_SELF_URL}
           - persistence_persistenceManagerImplementationClass=de.fraunhofer.iosb.ilt.sta.persistence.postgres.stringid.PostgresPersistenceManagerString
           - persistence_idGenerationMode=ServerAndClientGenerated
           - persistence_db_driver=org.postgresql.Driver
-          - persistence_db_url=jdbc:postgresql://database:5432/sensorthings
+          - persistence_db_url=jdbc:postgresql://postgis:5432/sensorthings
           - persistence_db_username=sensorthings
           - persistence_db_password=ChangeMe
           - http_cors_enable=true 
           - defaultTop=1000
           - maxTop=2147483647
-        restart: unless-stopped
-        ports:
-            - 1883:1883
-            - 8080:8080
         depends_on:
-            - database
+          - postgis
+        expose:
+          - 8080
+        ports:
+          - 1883:1883
 
-    database:
+    postgis:
         build:
             context: ./Frost-Server
             dockerfile: Dockerfile_db
+        container_name: postgis
         restart: unless-stopped
         volumes:
-            - database-data:/var/lib/postgresql/data
+            - ./postgis-data:/var/lib/postgresql/data:rw
+            - ./ssl:/etc/certs:ro
         environment:
             - POSTGRES_DB=sensorthings
             - POSTGRES_USER=sensorthings
             - POSTGRES_PASSWORD=ChangeMe
+            - POSTGRES_REPLICATION_USER=replication
+            - POSTGRES_REPLICATION_PASSWORD=ChangeMe
+            - POSTGRES_REPLICATION_MASTER=true or master fqdn
+            - POSTGRES_REPLICATION_HOSTS=Some hot standbys separated by spaces
         ports:
             - 5432:5432
-    nginx:
-       build: 
-            context: ./nginx
-            dockerfile: Dockerfile
-       ports:
-         - 80:80
-         - 443:443
-       environment:
-         - NGINX_HOST=${FROST_HOST}
-       depends_on:
-         - frost
-         - certbot
-       restart: unless-stopped
-       volumes:
-          - letsencrypt-conf:/etc/letsencrypt
-          - letsencrypt-data:/var/www/certbot
-       command: "/bin/sh -c 'ln -sfn ${FROST_HOST} /etc/letsencrypt/live/default && nginx -g \"daemon off;\"'"
-       healthcheck:
-          test: ["CMD","nginx","-s","reload","||","exit","1"]
-          interval: 6h
-
-    certbot:
-               image: certbot/certbot
-               restart: unless-stopped
-               volumes:
-                       - letsencrypt-conf:/etc/letsencrypt
-                       - letsencrypt-data:/var/www/certbot
-               entrypoint: "/bin/sh -c 'certbot renew; sleep 12h;'"
-
-volumes: 
-        letsencrypt-data:
-        letsencrypt-conf:
-        database-data:
+ 
