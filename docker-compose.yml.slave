@@ -6,15 +6,14 @@ services:
     container_name: frost
     restart: unless-stopped
     environment:
-    # - serviceRootUrl=#${FROST_SELF_URL}
-      - serviceRootUrl=https://smartaq01.teco.edu
+      - serviceRootUrl=https://BASE_URL
       - persistence_persistenceManagerImplementationClass=de.fraunhofer.iosb.ilt.sta.persistence.postgres.stringid.PostgresPersistenceManagerString
       - persistence_idGenerationMode=ServerAndClientGenerated
       - persistence_db_driver=org.postgresql.Driver
       - persistence_db_url=jdbc:postgresql://postgis:5432/sensorthings
       - persistence_db_username=sensorthings
-      - persistence_db_password=ef4dfb13e0805fff9dc29058af7934d115d055fa0234c5575ffde937312bb25
-      - http_cors_enable=ChangeMe
+      - persistence_db_password=ChangeMe
+      - http_cors_enable=true
       - defaultTop=1000
       - maxTop=2147483647
     depends_on:
@@ -38,12 +37,11 @@ services:
       - POSTGRES_USER=sensorthings
       - POSTGRES_PASSWORD=ChangeMe
       - POSTGRES_REPLICATION_USER=replication
-      - POSTGRES_REPLICATION_PASSWORD=Change Me
-      - POSTGRES_REPLICATION_MASTER=true or master fqdn
-      - POSTGRES_REPLICATION_HOSTS=Some hot standbys separated by spaces
+      - POSTGRES_REPLICATION_PASSWORD=ChangeMe
+      - POSTGRES_REPLICATION_MASTER=IP or FQDN of master PostgreSQL host
+      - POSTGRES_REPLICATION_HOSTS=IPs of all PostgreSQL hosts (including master) separated by space
     ports:
       - 5432:5432
->>>>>>> Stashed changes
  
   nginx:
     build:
@@ -54,27 +52,14 @@ services:
     volumes:
       - ./ssl:/etc/certs:ro
     environment:
-      - NGINX_HOST=smartaq01.teco.edu
+      - NGINX_HOST=This FQDN
     depends_on:
       - frost
-    expose:
-      - 80
-      - 443
+    ports:
+      - 80:80
+      - 443:443
     command: "/bin/sh -c 'mkdir -p /etc/letsencrypt/live && ln -sfn /etc/certs /etc/letsencrypt/live/default && nginx -g \"daemon off;\"'"
     healthcheck:
       test: [ "CMD", "nginx", "-s", "reload", "||", "exit", "1" ]
       interval: 6h
 
-  loadbalancer:
-    image: nginx:latest
-    container_name: nginx-lb
-    restart: unless-stopped
-    volumes:
-      - ./ssl:/etc/certs:ro
-      - ./loadbalancer.conf:/etc/nginx/conf.d/default.conf:ro
-    ports:
-      - 80:80
-      - 443:443
-    healthcheck:
-      test: [ "CMD", "nginx", "-s", "reload", "||", "exit", "1" ]
-      interval: 6h

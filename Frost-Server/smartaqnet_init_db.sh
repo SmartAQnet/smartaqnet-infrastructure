@@ -8,8 +8,7 @@ fi
 
 write_pg_hba_conf() {
   FILE="${PGDATA}/pg_hba.conf"
-  echo "" > ${FILE}
-  cat >> ${FILE} <<EOF
+  cat > ${FILE} <<EOF
 # TYPE  DATABASE        USER            ADDRESS                 METHOD
 
 # "local" is for Unix domain socket connections only
@@ -26,7 +25,7 @@ host    all             all             ::1/128                 trust
 
 host all all 10.0.0.0/8 md5
 host all all 172.16.0.0/12 md5
-host all all 192.168.0.0/24 md5
+host all all 192.168.0.0/16 md5
 EOF
   for name in ${POSTGRES_REPLICATION_HOSTS}; do
     echo "hostssl ${POSTGRES_REPLICATION_USER} all ${name}/32 md5" >> ${FILE}
@@ -54,6 +53,30 @@ hot_standby = on
 EOF
 }
 
+add_replication_login() {
+  echo "*:*:*:${POSTGRES_REPLICATION_USER}:${POSTGRES_REPLICATION_PASSWORD}" > ~/.pgpass
+  chmod 0600 ~/.pgpass
+}
+
+load_basebackup() {
+  echo "Loading master's basebackup. If this takes too long maybe this server cannot reach the master"
+  rm -rf ${PGDATA}/*
+  until pg_basebackup -v -P -X stream -D ${PGDATA} -d "${PG_CONN_STRING}"; do
+    echo "Trying to connect to master..."
+    sleep 1s
+  done
+}
+
+enable_postgresql_replication_backup() {
+  FILE="${PGDATA}/recovery.conf"
+  cat > ${FILE} <<EOF
+standby_mode = on
+primary_conninfo = '${PG_CONN_STRING}'
+trigger_file = '${PGDATA}/promote_master_touch'
+EOF
+  #sed -i 's/wal_level = hot_standby/wal_level = replica/g'
+}
+
 # initialise the uuid-ossp extension in order to use UUIDs as ID
 # and add replication user
 psql -v ON_ERROR_STOP=1 --username "${POSTGRES_USER}" --dbname "${POSTGRES_DB}" <<EOSQL
@@ -63,15 +86,23 @@ EOSQL
 
 # update postgres configs
 if [[ "${POSTGRES_REPLICATION_MASTER}" == "true" ]]; then
+  echo "SmartAQNet PostGis configuring master server"
   write_pg_hba_conf
   enable_postgresql_ssl
   enable_postgresql_replication
-elif [[ -z "${POSTGRES_MASTER}" ]]; then
-  echo "No master server specified or not set as master!"
+elif [[ -z "${POSTGRES_REPLICATION_MASTER}" ]]; then
+  echo "SmartAQNet ERROR: No master server specified or not set as master!"
   exit 1
 else 
-  echo "TBD"
-  exit 1
+  echo "SmartAQNet PostGis configuring hot standby server"
+  pg_ctl stop
+  PG_CONN_STRING="host=${POSTGRES_REPLICATION_MASTER} port=5432 user=${POSTGRES_REPLICATION_USER} password=${POSTGRES_REPLICATION_PASSWORD} sslmode=require"
+  echo "Connection string is: ${PG_CONN_STRING}"
+  write_pg_hba_conf
+  add_replication_login
+  load_basebackup
+  enable_postgresql_replication_backup
+  pg_ctl start -w -D ${PGDATA} 
 fi
 echo "SmartAQNet Replication and SQL init done"
 exit 0
