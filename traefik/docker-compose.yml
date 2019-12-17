@@ -1,0 +1,64 @@
+version: "3"
+services:
+  traefik:
+    image: traefik:v2.1.1
+    command:
+      - '--api=true'
+      - '--api.dashboard=true'
+      - '--api.debug=true'
+      - '--log=true'
+      - '--log.level=INFO'
+      - '--accesslog=true'
+      - '--global.checknewversion=true'
+      - '--global.sendanonymoususage=false'
+      - '--entrypoints.http.address=:80'
+      - '--entrypoints.https.address=:443'
+      - '--entrypoints.mqtt.address=:1883'
+      - '--entrypoints.psql.address=:5432'
+      - '--entrypoints.traefik.address=:8080'
+      - '--certificatesresolvers.le.acme.email=unixadmin@teco.edu'
+      - '--certificatesresolvers.le.acme.storage=/etc/traefik/acme/acme.json'
+      - '--certificatesresolvers.le.acme.httpchallenge.entrypoint=http'
+      - '--providers.docker=true'
+      - '--providers.docker.swarmmode=true'
+      - '--providers.docker.watch=true'
+      - '--providers.docker.exposedbydefault=false'
+      - '--providers.docker.network=traefik_network'
+    networks:
+      - network
+    volumes:
+      - 'certs:/etc/traefik/acme:rw'
+      - '/var/run/docker.sock:/var/run/docker.sock'
+    ports:
+      - '80:80'
+      - '443:443'
+      - '1883:1883'
+      - '5432:5432'
+      - '8080:8080'
+    deploy:
+      mode: global
+      placement:
+        constraints:
+          - node.role == manager
+      update_config:
+        parallelism: 1
+        delay: 10s
+      restart_policy:
+        condition: on-failure
+      labels:
+        - 'traefik.enable=true'
+        - 'traefik.http.middlewares.api_basicauth.basicauth.users=admin:$$apr1$$OOytxnSp$$p5QKFhXpyzeHsBfiqatAL0'
+        - 'traefik.http.middlewares.api_basicauth.basicauth.realm=DashboardLogin'
+        - 'traefik.http.middlewares.api_basicauth.basicauth.removeheader=true'
+        - 'traefik.http.routers.api.rule=PathPrefix(`/api`) || PathPrefix(`/dashboard`)'
+        - 'traefik.http.routers.api.service=api@internal'
+        - 'traefik.http.routers.api.middlewares=api_basicauth@docker'
+        - 'traefik.http.routers.api.entrypoints=traefik'
+        - 'traefik.http.services.api.loadbalancer.server.port=9999'
+networks:
+  network:
+    driver: overlay
+    driver_opts:
+      encrypted: ""
+volumes:
+  certs:
