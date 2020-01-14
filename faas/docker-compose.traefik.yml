@@ -1,0 +1,23 @@
+version: "3.3"
+services:
+    gateway:
+      networks:
+        - traefik
+      deploy:
+        labels:
+          - 'traefik.enable=true'
+          - 'traefik.http.services.faas_backend.loadbalancer.server.port=8080'
+          - 'traefik.http.middlewares.faas_basicauth.basicauth.users=admin:$$apr1$$rBApfyOl$$ZzmbEtprV3H5G5MnbO8JD0'
+          #- traefik.frontend.rule=PathPrefix:/ui,/system,/function
+          - 'traefik.http.middlewares.faas_basicauth.basicauth.realm=FaasLogin'
+          - 'traefik.http.middlewares.faas_basicauth.basicauth.removeheader=false'
+          - 'traefik.http.routers.faas_backend.rule=PathPrefix(`/ui`) || PathPrefix(`/system`)'
+          - 'traefik.http.routers.faas_backend.service=faas_backend@docker'
+          - 'traefik.http.routers.faas_backend.middlewares=faas_basicauth@docker'
+          - 'traefik.http.routers.faas_backend.entrypoints=faas_backend'
+          - 'traefik.http.routers.faas_backend.tls=true'
+          - 'traefik.http.routers.faas_backend.tls.certresolver=le'
+networks:
+  traefik:
+    external:
+      name: 'traefik_network'
