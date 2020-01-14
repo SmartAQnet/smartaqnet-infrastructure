@@ -1,0 +1,3 @@
+[submodule "faas"]
+	path = faas
+	url = https://github.com/openfaas/faas.git

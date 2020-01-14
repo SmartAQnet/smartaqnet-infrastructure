@@ -3,7 +3,7 @@ services:
   write:
     image: fraunhoferiosb/frost-server:1.9
     environment:
-      - serviceRootUrl=https://HOST_NAME
+      - serviceRootUrl=https://${HOST_NAME}
       - persistence_persistenceManagerImplementationClass=de.fraunhofer.iosb.ilt.sta.persistence.postgres.stringid.PostgresPersistenceManagerString
       - persistence_idGenerationMode=ServerAndClientGenerated
       - persistence_db_driver=org.postgresql.Driver
@@ -31,36 +31,36 @@ services:
         - 'traefik.http.middlewares.frostwrite_redirectregex.redirectregex.regex=^(.*)'
         - 'traefik.http.middlewares.frostwrite_redirectregex.redirectregex.replacement=https://smartaqnet.github.io/'
         - 'traefik.http.middlewares.frostwrite_redirectregex.redirectregex.permanent=true'
-        - 'traefik.http.routers.frostwriteapis.rule=Host(`HOST_NAME`) && PathPrefix (`/v1.0`) && (Method(`POST`) || Method(`PATCH`))'
+        - 'traefik.http.routers.frostwriteapis.rule=Host(`${HOST_NAME}`) && PathPrefix (`/v1.0`) && (Method(`POST`) || Method(`PATCH`))'
         - 'traefik.http.routers.frostwriteapis.middlewares=frostwrite_addprefix@docker'
         - 'traefik.http.routers.frostwriteapis.entrypoints=https'
         - 'traefik.http.routers.frostwriteapis.service=frostwriteapi@docker'
         - 'traefik.http.routers.frostwriteapis.tls=true'
         - 'traefik.http.routers.frostwriteapis.tls.certresolver=le'
         - 'traefik.http.routers.frostwriteapis.priority=3'
-        - 'traefik.http.routers.frostwritewss.rule=Host(`HOST_NAME`) && PathPrefix(`/mqtt`)'
+        - 'traefik.http.routers.frostwritewss.rule=Host(`${HOST_NAME}`) && PathPrefix(`/mqtt`)'
         - 'traefik.http.routers.frostwritewss.entrypoints=https'
         - 'traefik.http.routers.frostwritewss.service=frostwritews@docker'
         - 'traefik.http.routers.frostwritewss.tls=true'
         - 'traefik.http.routers.frostwritewss.tls.certresolver=le'
         - 'traefik.http.routers.frostwritewss.priority=2'
-        - 'traefik.http.routers.frostwriteredirects.rule=Host(`HOST_NAME`)'
+        - 'traefik.http.routers.frostwriteredirects.rule=Host(`${HOST_NAME}`)'
         - 'traefik.http.routers.frostwriteredirects.middlewares=frostwrite_redirectregex@docker'
         - 'traefik.http.routers.frostwriteredirects.entrypoints=https'
         - 'traefik.http.routers.frostwriteredirects.service=frostwriteapi@docker'
         - 'traefik.http.routers.frostwriteredirects.tls=true'
         - 'traefik.http.routers.frostwriteredirects.tls.certresolver=le'
         - 'traefik.http.routers.frostwriteredirects.priority=1'
-        - 'traefik.http.routers.frostwriteapi.rule=Host(`HOST_NAME`) && PathPrefix(`/v1.0`) && (Method(`POST`) || Method(`PATCH`))'
+        - 'traefik.http.routers.frostwriteapi.rule=Host(`${HOST_NAME}`) && PathPrefix(`/v1.0`) && (Method(`POST`) || Method(`PATCH`))'
         - 'traefik.http.routers.frostwriteapi.middlewares=frostwrite_addprefix@docker'
         - 'traefik.http.routers.frostwriteapi.entrypoints=http'
         - 'traefik.http.routers.frostwriteapi.service=frostwriteapi@docker'
         - 'traefik.http.routers.frostwriteapi.priority=3'
-        - 'traefik.http.routers.frostwritews.rule=Host(`HOST_NAME`) && PathPrefix(`/mqtt`)'
+        - 'traefik.http.routers.frostwritews.rule=Host(`${HOST_NAME}`) && PathPrefix(`/mqtt`)'
         - 'traefik.http.routers.frostwritews.entrypoints=http'
         - 'traefik.http.routers.frostwritews.service=frostwritews@docker'
         - 'traefik.http.routers.frostwritews.priority=2'
-        - 'traefik.http.routers.frostwriteredirect.rule=Host(`HOST_NAME`)'
+        - 'traefik.http.routers.frostwriteredirect.rule=Host(`${HOST_NAME}`)'
         - 'traefik.http.routers.frostwriteredirect.middlewares=frostwrite_redirectregex@docker'
         - 'traefik.http.routers.frostwriteredirect.entrypoints=http'
         - 'traefik.http.routers.frostwriteredirect.service=frostwriteapi@docker'
@@ -72,7 +72,7 @@ services:
   read:
     image: fraunhoferiosb/frost-server:1.9
     environment:
-      - serviceRootUrl=https://HOST_NAME
+      - serviceRootUrl=https://${HOST_NAME}
       - persistence_persistenceManagerImplementationClass=de.fraunhofer.iosb.ilt.sta.persistence.postgres.stringid.PostgresPersistenceManagerString
       - persistence_idGenerationMode=ServerAndClientGenerated
       - persistence_db_driver=org.postgresql.Driver
@@ -94,14 +94,14 @@ services:
         - 'traefik.enable=true'
         - 'traefik.http.services.frostreadapi.loadbalancer.server.port=8080'
         - 'traefik.http.middlewares.frostread_addprefix.addprefix.prefix=/FROST-Server'
-        - 'traefik.http.routers.frostreadapis.rule=Host(`HOST_NAME`) && PathPrefix(`/v1.0`) && Method(`GET`)'
+        - 'traefik.http.routers.frostreadapis.rule=Host(`${HOST_NAME}`) && PathPrefix(`/v1.0`) && Method(`GET`)'
         - 'traefik.http.routers.frostreadapis.middlewares=frostread_addprefix@docker'
         - 'traefik.http.routers.frostreadapis.entrypoints=https'
         - 'traefik.http.routers.frostreadapis.service=frostreadapi@docker'
         - 'traefik.http.routers.frostreadapis.tls=true'
         - 'traefik.http.routers.frostreadapis.tls.certresolver=le'
         - 'traefik.http.routers.frostreadapis.priority=3'
-        - 'traefik.http.routers.frostreadapi.rule=Host(`HOST_NAME`) && PathPrefix(`/v1.0`) && Method(`GET`)'
+        - 'traefik.http.routers.frostreadapi.rule=Host(`${HOST_NAME}`) && PathPrefix(`/v1.0`) && Method(`GET`)'
         - 'traefik.http.routers.frostreadapi.middlewares=frostread_addprefix@docker'
         - 'traefik.http.routers.frostreadapi.entrypoints=http'
         - 'traefik.http.routers.frostreadapi.service=frostreadapi@docker'

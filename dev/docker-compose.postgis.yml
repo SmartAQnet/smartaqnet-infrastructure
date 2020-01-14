@@ -1,0 +1,8 @@
+version: '3'
+services:
+  master:
+    image: swarm-manager-1:5000/smartaqnet/postgis:9.5-alpine
+    build: ../postgis
+  replica:
+    image: swarm-manager-1:5000/smartaqnet/postgis:9.5-alpine
+    build: ../postgis

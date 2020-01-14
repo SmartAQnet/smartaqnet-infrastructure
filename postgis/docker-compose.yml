@@ -34,6 +34,7 @@ services:
       - POSTGRES_PASSWORD=ChangeMe
       - POSTGRES_REPLICATION_USER=replication
       - POSTGRES_REPLICATION_PASSWORD=ChangeMe
+      - POSTGRES_REPLICATION_MASTER_HOST=master
       - 'replica:/var/lib/postgresql/data:rw'
     networks:
       - traefik

@@ -1,0 +1,10 @@
+version: '3'
+services:
+  write:
+    deploy:
+      labels:
+        #Adds a debug route to make /FROST-Server reachable
+        - 'traefik.http.routers.frostdebug.rule=Host(`${HOST_NAME}`) && PathPrefix(`/FROST-Server`)'
+        - 'traefik.http.routers.frostdebug.entrypoints=http'
+        - 'traefik.http.routers.frostdebug.service=frostwriteapi@docker'
+        

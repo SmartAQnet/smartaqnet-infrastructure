@@ -1,0 +1,124 @@
+version: "3"
+
+# Thanks to @allingeek
+
+# GETTING STARTED:
+#   docker-compose up -d
+#   docker ps -a
+#   DOCKER_HOST=tcp://localhost:3375 docker info
+#   DOCKER_HOST=tcp://localhost:3375 docker ps -a
+#   docker-compose scale smlc=2
+#   DOCKER_HOST=tcp://localhost:3375 docker ps -a --filter 'label=scheduled-by=sm'
+
+# CLEANING UP:
+#   docker-compose down -v
+
+networks:
+  swarm:
+    driver: bridge
+
+volumes:
+  swarm:
+
+services:
+  manager:
+    container_name: swarm-manager-1
+    image: docker:19.03.5-dind
+    command: "--insecure-registry swarm-manager-1:5000"
+    hostname: swarm-manager-1
+    networks:
+      - swarm
+    ports:
+      - "127.0.0.1:22375:2375/tcp"
+      - "80:80"
+      - "443:443"
+      - "1883:1883"
+      - "5432:5432"
+      - "8080:8080"
+      - "5000:5000"
+      - "8081:8081"
+    privileged: true
+    volumes:
+      - "/lib/modules:/lib/modules:ro"
+    environment:
+      DOCKER_TLS_CERTDIR:
+  init:
+    command: sh -e -c 'docker swarm init && docker swarm join-token -q worker --quiet > /swarm/token'
+    container_name: swarm-manager-1-init
+    environment:
+      DOCKER_HOST: "tcp://swarm-manager-1:2375"
+      DOCKER_TLS_CERTDIR:
+    image: docker:17.05
+    networks:
+      - swarm
+    volumes:
+      - "swarm:/swarm"
+  worker2:
+    container_name: swarm-worker-2
+    hostname: swarm-worker-2
+    command: "--insecure-registry swarm-manager-1:5000"
+    image: docker:19.03.5-dind
+    networks:
+      - swarm
+    privileged: true
+    volumes:
+      - "/lib/modules:/lib/modules:ro"
+    environment:
+      DOCKER_TLS_CERTDIR:
+  worker2-init:
+    command: "sh -c 'sleep 10 && docker swarm join --token $$(cat /swarm/token) manager:2377 || true'"
+    container_name: swarm-worker-2-init
+    environment:
+      DOCKER_HOST: "tcp://swarm-worker-2:2375"
+      DOCKER_TLS_CERTDIR:
+    image: docker:17.05
+    networks:
+      - swarm
+    volumes:
+      - "swarm:/swarm"
+  worker1:
+    container_name: swarm-worker-1
+    image: docker:19.03.5-dind
+    command: "--insecure-registry swarm-manager-1:5000"
+    hostname: swarm-worker-1
+    networks:
+      - swarm
+    privileged: true
+    volumes:
+      - "/lib/modules:/lib/modules:ro"
+    environment:
+      DOCKER_TLS_CERTDIR:
+  worker1-init:
+    command: "sh -c 'sleep 10 && docker swarm join --token $$(cat /swarm/token) manager:2377 || true'"
+    container_name: swarm-worker-1-init
+    environment:
+      DOCKER_HOST: "tcp://swarm-worker-1:2375"
+      DOCKER_TLS_CERTDIR:
+    image: docker:17.05
+    networks:
+      - swarm
+    volumes:
+      - "swarm:/swarm"
+  worker3:
+    container_name: swarm-worker-3
+    image: docker:19.03.5-dind
+    command: "--insecure-registry swarm-manager-1:5000"
+    hostname: swarm-worker-3
+    networks:
+      - swarm
+    privileged: true
+    volumes:
+      - "/lib/modules:/lib/modules:ro"
+    environment:
+      DOCKER_TLS_CERTDIR:
+  worker3-init:
+    command: "sh -c 'sleep 10 && docker swarm join --token $$(cat /swarm/token) manager:2377 || true'"
+    container_name: swarm-worker-3-init
+    environment:
+      DOCKER_HOST: "tcp://swarm-worker-3:2375"
+      DOCKER_TLS_CERTDIR:
+    image: docker:17.05
+    networks:
+      - swarm
+    volumes:
+      - "swarm:/swarm"

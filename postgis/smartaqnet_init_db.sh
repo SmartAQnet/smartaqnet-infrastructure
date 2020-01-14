@@ -78,7 +78,7 @@ if [[ "${POSTGRES_REPLICATION_MASTER}" == "true" ]]; then
 else 
   echo "SmartAQNet PostGis configuring hot standby server"
   pg_ctl stop
-  PG_CONN_STRING="host=${POSTGRES_REPLICATION_MASTER} port=5432 user=${POSTGRES_REPLICATION_USER} password=${POSTGRES_REPLICATION_PASSWORD}"
+  PG_CONN_STRING="host=${POSTGRES_REPLICATION_MASTER_HOST} port=5432 user=${POSTGRES_REPLICATION_USER} password=${POSTGRES_REPLICATION_PASSWORD}"
   echo "Connection string is: ${PG_CONN_STRING}"
   write_pg_hba_conf
   load_basebackup
