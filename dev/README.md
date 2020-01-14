@@ -33,7 +33,13 @@ ubsg9jaqu9qsoebq45h3ssiti     swarm-worker-2      Ready               Active    
 i4a0yco1voqvpo2676098l3ok     swarm-worker-3      Ready               Active                                  19.03.5
 ```
 
-If you see an error or some of your workers are not ready, [simply shut down the swarm](#Shut-down) and try again. The workers try to join the swarm after 10 seconds (See `sleep 10` in `docker-compose.swarm.yml`). You can adjust this, if the workers 
+If you see an error or some of your workers are not ready, [simply shut down the swarm](#Shut-down) and try again. The workers try to join the swarm after 10 seconds (See `sleep 10` in `docker-compose.swarm.yml`). You can adjust this waiting period accordingly if you see your workers not connecting.
+
+Finally, in the same terminal in which you set the `DOCKER_HOST` variable execute: `./deploy_all_dev.sh`
+
+This will build all needed images, push them to a private registry which is also created on this swarm, and deploy all stacks as defined in the docker-compose.yml-files in this repository.
+
+You should be able to reach the FROST-Server `localhost/v1.0/`
 
 ## Shut down
 
