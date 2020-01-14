@@ -1,5 +1,10 @@
 # Development Version
 
+## :exclamation: Security Warning :exclamation:
+The current development version starts a dockerized swarm as priviliged docker containers.
+The docker deamon of the manager node is bound to 127.0.0.1:22375 of the HOST. TLS verification is disabled.
+Access to this port is equivalent to root priviliges on the HOST machine.
+
 ## Prerequisites
 - Docker
 - Docker-Compose
