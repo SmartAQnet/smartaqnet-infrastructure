@@ -15,6 +15,7 @@ Clone this repository:
 
 ```
 git clone https://github.com/SmartAQnet/smartaqnet-infrastructure.git
+cd smartaqnet-infrastructure/
 git checkout cluster-dev
 ```
 
