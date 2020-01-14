@@ -6,7 +6,7 @@
 - Free ports as specified in docker-compose.swarm.yml
 
 ## Setup
-Clone this repository with submodules:
+Clone this repository:
 
 ```
 git clone https://github.com/SmartAQnet/smartaqnet-infrastructure.git
