@@ -37,13 +37,14 @@ services:
       - "8080:8080"
       - "5000:5000"
       - "8081:8081"
+      - "19999:19999"
     privileged: true
     volumes:
       - "/lib/modules:/lib/modules:ro"
     environment:
       DOCKER_TLS_CERTDIR:
   init:
-    command: sh -e -c 'docker swarm init && docker swarm join-token -q worker --quiet > /swarm/token'
+    command: sh -e -c 'sleep 4 && docker swarm init && docker swarm join-token -q worker --quiet > /swarm/token'
     container_name: swarm-manager-1-init
     environment:
       DOCKER_HOST: "tcp://swarm-manager-1:2375"

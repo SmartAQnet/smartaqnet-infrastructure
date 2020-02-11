@@ -1,0 +1,28 @@
+version: "3"
+services:
+  docker-registry:
+    image: registry:2
+    networks:
+      - traefik
+    deploy:
+      placement:
+        constraints:
+          - "node.role == manager"
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.services.registry.loadbalancer.server.port=5000"
+        - "traefik.http.middlewares.registry_basicauth.basicauth.users=admin:$$apr1$$rBApfyOl$$ZzmbEtprV3H5G5MnbO8JD0"
+        - "traefik.http.middlewares.registry_basicauth.basicauth.realm=RegistryLogin"
+        - "traefik.http.middlewares.registry_basicauth.basicauth.removeheader=false"
+        - "traefik.http.routers.registry.service=registry@docker"
+        - "traefik.http.routers.registry.middlewares=registry_basicauth@docker"
+        - "traefik.http.routers.registry.entrypoints=registry"
+        - "traefik.http.routers.registry.tls=true"
+        - "traefik.http.routers.registry.tls.domains[0].main=test.smartaqnet.teco.edu"
+        - "traefik.http.routers.registry.tls.certresolver=le"
+        - "traefik.http.routers.registry.rule=PathPrefix(`/`)"
+
+networks:
+  traefik:
+    external:
+      name: "traefik_network"

@@ -39,8 +39,9 @@ wal_level = hot_standby
 archive_mode = on
 archive_command = 'cd .'
 max_wal_senders = 8
-wal_keep_segments = 8
+wal_keep_segments = 24
 hot_standby = on
+vacuum_defer_cleanup_age = 20
 EOF
 }
 
@@ -63,6 +64,13 @@ EOF
   #sed -i 's/wal_level = hot_standby/wal_level = replica/g'
 }
 
+enable_postgresql_replication_feedback() {
+  FILE="${PGDATA}/postgresql.conf"
+  cat >> ${FILE} <<EOF
+hot_standby_feedback = on
+EOF
+}
+
 # initialise the uuid-ossp extension in order to use UUIDs as ID
 # and add replication user
 psql -v ON_ERROR_STOP=1 --username "${POSTGRES_USER}" --dbname "${POSTGRES_DB}" <<EOSQL
@@ -83,6 +91,7 @@ else
   write_pg_hba_conf
   load_basebackup
   enable_postgresql_replication_backup
+  enable_postgresql_replication_feedback
   pg_ctl start -w -D ${PGDATA} 
 fi
 echo "SmartAQNet Replication and SQL init done"

@@ -11,12 +11,20 @@ services:
           #- traefik.frontend.rule=PathPrefix:/ui,/system,/function
           - 'traefik.http.middlewares.faas_basicauth.basicauth.realm=FaasLogin'
           - 'traefik.http.middlewares.faas_basicauth.basicauth.removeheader=false'
-          - 'traefik.http.routers.faas_backend.rule=PathPrefix(`/ui`) || PathPrefix(`/system`)'
+          - 'traefik.http.routers.faas_backend.rule=PathPrefix(`/ui`) || PathPrefix(`/system`) || PathPrefix(`/function`)'
           - 'traefik.http.routers.faas_backend.service=faas_backend@docker'
           - 'traefik.http.routers.faas_backend.middlewares=faas_basicauth@docker'
           - 'traefik.http.routers.faas_backend.entrypoints=faas_backend'
           - 'traefik.http.routers.faas_backend.tls=true'
           - 'traefik.http.routers.faas_backend.tls.certresolver=le'
+          - 'traefik.http.routers.faas_frontend.rule=Host(`${HOST_NAME}`) && PathPrefix(`/function`)'
+          - 'traefik.http.routers.faas_frontend.service=faas_backend@docker'
+          - 'traefik.http.routers.faas_frontend.entrypoints=http'
+          - 'traefik.http.routers.faas_frontends.rule=Host(`${HOST_NAME}`) && PathPrefix(`/function`)'
+          - 'traefik.http.routers.faas_frontends.service=faas_backend@docker'
+          - 'traefik.http.routers.faas_frontends.entrypoints=https'
+          - 'traefik.http.routers.faas_frontends.tls=true'
+          - 'traefik.http.routers.faas_frontends.tls.certresolver=le'
 networks:
   traefik:
     external:

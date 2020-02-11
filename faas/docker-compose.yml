@@ -37,6 +37,8 @@ services:
             placement:
                 constraints:
                     - "node.platform.os == linux"
+                    - node.role == worker
+                    - node.labels.postgis == replica
         secrets:
             - basic-auth-user
             - basic-auth-password
@@ -120,6 +122,8 @@ services:
             placement:
                 constraints:
                     - "node.platform.os == linux"
+                    - node.role == worker
+                    - node.labels.postgis == replica
 
     queue-worker:
         image: openfaas/queue-worker:0.8.4
@@ -146,6 +150,8 @@ services:
             placement:
                 constraints:
                     - "node.platform.os == linux"
+                    - node.role == worker
+                    - node.labels.postgis == replica
         secrets:
             - basic-auth-user
             - basic-auth-password

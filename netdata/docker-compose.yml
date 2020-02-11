@@ -1,0 +1,52 @@
+version: "3"
+services:
+  netdata:
+    image: registry.teco.edu/smartaqnet/netdata:v1.19.0
+    build: .
+    environment:
+      - DO_NOT_TRACK=1
+    hostname: "{{.Node.Hostname}}"
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+      placement:
+        constraints:
+          - node.role == worker
+          - node.labels.postgis == master
+    ports:
+      - 19999:19999
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+    networks:
+      - traefik
+      - default
+  netdata-slave:
+    image: registry.teco.edu/smartaqnet/netdata-slave:v1.19.0
+    build:
+      context: .
+      dockerfile: ./Dockerfile-slave
+    environment:
+      - DO_NOT_TRACK=1
+    hostname: "{{.Node.Hostname}}"
+    deploy:
+      mode: global
+      restart_policy:
+        condition: on-failure
+      placement:
+        constraints:
+          - node.role == worker
+          - node.labels.postgis == replica
+    ports:
+      - 19998:19999
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+    networks:
+      - traefik
+      - default
+networks:
+  traefik:
+    external:
+      name: 'traefik_network'

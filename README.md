@@ -50,3 +50,38 @@ This will also remove any state of the swarm and all the docker stacks within th
 
 # Overview
 ![Overview](overview.png)
+
+# Production Version
+
+## Swarm Set-up
+[TBD: init swarm and setup labels, execute deploy_all_prod.sh on manager]
+
+## Resize Docker partition
+Use `lsblk` to find the partition the docker daemon is using. Use `growpart` and `resize2fs` to resize the partition/filesystem. Backing up the partition table before doing so would be better.
+
+```
+ubuntu@smartaqnet-worker1:~$ lsblk
+NAME    MAJ:MIN RM  SIZE RO TYPE MOUNTPOINT
+vda     252:0    0   16G  0 disk 
+├─vda1  252:1    0 15.9G  0 part /
+├─vda14 252:14   0    4M  0 part 
+└─vda15 252:15   0  106M  0 part /boot/efi
+vdb     252:16   0   48G  0 disk 
+└─vdb1  252:17   0   32G  0 part /var/lib/docker
+ubuntu@smartaqnet-worker1:~$ sudo growpart /dev/vdb 1
+CHANGED: partition=1 start=2048 old: size=67106783 end=67108831 new: size=100661215,end=100663263
+ubuntu@smartaqnet-worker1:~$ sudo resize2fs /dev/vdb1
+resize2fs 1.44.1 (24-Mar-2018)
+Filesystem at /dev/vdb1 is mounted on /var/lib/docker; on-line resizing required
+old_desc_blocks = 4, new_desc_blocks = 6
+The filesystem on /dev/vdb1 is now 12582651 (4k) blocks long.
+
+ubuntu@smartaqnet-worker1:~$ lsblk
+NAME    MAJ:MIN RM  SIZE RO TYPE MOUNTPOINT
+vda     252:0    0   16G  0 disk 
+├─vda1  252:1    0 15.9G  0 part /
+├─vda14 252:14   0    4M  0 part 
+└─vda15 252:15   0  106M  0 part /boot/efi
+vdb     252:16   0   48G  0 disk 
+└─vdb1  252:17   0   48G  0 part /var/lib/docker
+```

@@ -1,0 +1,5 @@
+version: '3'
+services:
+  netdata:
+    image: swarm-manager-1:5000/smartaqnet/netdata:v1.19.0
+    build: ../netdata

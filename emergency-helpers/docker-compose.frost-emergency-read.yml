@@ -1,0 +1,6 @@
+#This file is not meant to be started in normal operation, please read emergencies.md
+version: '3'
+services:
+  read:
+      environment:
+        - persistence_db_url=jdbc:postgresql://postgis_master:5432/sensorthings

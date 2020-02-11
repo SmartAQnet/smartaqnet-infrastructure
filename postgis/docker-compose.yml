@@ -1,7 +1,8 @@
-version: '3'
+version: '3.2'
 services:
   master:
     image: registry.teco.edu/smartaqnet/postgis:9.5-alpine
+    build: .
     environment:
       - POSTGRES_DB=sensorthings
       - POSTGRES_USER=sensorthings
@@ -13,6 +14,11 @@ services:
       - 'master:/var/lib/postgresql/data:rw'
     networks:
       - traefik
+    ports:
+      - target: 5432
+        published: 15432
+        protocol: tcp
+        mode: host
     deploy:
       mode: replicated
       replicas: 1
@@ -27,7 +33,13 @@ services:
         - 'traefik.tcp.routers.psqlm.service=psqlm@docker'
         - 'traefik.tcp.services.psqlm.loadbalancer.server.port=5432'
   replica:
+    build: .
     image: registry.teco.edu/smartaqnet/postgis:9.5-alpine
+    ports:
+      - target: 5432
+        published: 15432
+        protocol: tcp
+        mode: host
     environment:
       - POSTGRES_DB=sensorthings
       - POSTGRES_USER=sensorthings
@@ -35,6 +47,7 @@ services:
       - POSTGRES_REPLICATION_USER=replication
       - POSTGRES_REPLICATION_PASSWORD=ChangeMe
       - POSTGRES_REPLICATION_MASTER_HOST=master
+    volumes:
       - 'replica:/var/lib/postgresql/data:rw'
     networks:
       - traefik
