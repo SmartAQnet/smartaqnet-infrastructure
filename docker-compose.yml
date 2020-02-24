@@ -15,6 +15,11 @@ services:
           - defaultTop=1000
           - maxTop=2147483647
         restart: unless-stopped
+        logging:
+            driver: "json-file"
+            options:
+                max-size: "100000k"
+                max-file: "10"
         ports:
             - 1883:1883
             - 8080:8080
@@ -27,13 +32,19 @@ services:
             dockerfile: Dockerfile_db
         restart: unless-stopped
         volumes:
-            - database-data:/var/lib/postgresql/data
+            - /var/data:/var/lib/postgresql/data
         environment:
             - POSTGRES_DB=sensorthings
             - POSTGRES_USER=sensorthings
             - POSTGRES_PASSWORD=ChangeMe
         ports:
             - 5432:5432
+        logging:
+            driver: "json-file"
+            options:
+                max-size: "100000k"
+                max-file: "10"
+
     nginx:
        build: 
             context: ./nginx
@@ -52,8 +63,13 @@ services:
           - letsencrypt-data:/var/www/certbot
        command: "/bin/sh -c 'ln -sfn ${FROST_HOST} /etc/letsencrypt/live/default && nginx -g \"daemon off;\"'"
        healthcheck:
-          test: ["CMD","nginx","-s","reload","||","exit","1"]
-          interval: 6h
+           test: ["CMD","nginx","-s","reload","||","exit","1"]
+           interval: 6h
+       logging:
+           driver: "json-file"
+           options:
+               max-size: "100000k"
+               max-file: "10"
 
     certbot:
                image: certbot/certbot
