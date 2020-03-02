@@ -12,6 +12,8 @@ services:
           - persistence_db_username=sensorthings
           - persistence_db_password=ChangeMe
           - http_cors_enable=true 
+          - http.cors.allowed.origins=http://smartaq.net, http://www.smartaq.net, http://api.smartaq.net, https://smartaq.net, https://www.smartaq.net, https://api.smartaq.net
+          - http.cors.allowed.methods=GET, HEAD, OPTIONS, POST, PATCH
           - defaultTop=1000
           - maxTop=2147483647
         restart: unless-stopped
