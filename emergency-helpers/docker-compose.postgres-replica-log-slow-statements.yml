@@ -1,0 +1,4 @@
+version: '3.2'
+services:
+  replica:
+    command: ["postgres", "-c", "log_min_duration_statement=1000"]

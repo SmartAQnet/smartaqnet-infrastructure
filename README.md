@@ -56,6 +56,8 @@ This will also remove any state of the swarm and all the docker stacks within th
 ## Swarm Set-up
 [TBD: init swarm and setup labels, execute deploy_all_prod.sh on manager]
 
+
+
 ## Resize Docker partition
 Use `lsblk` to find the partition the docker daemon is using. Use `growpart` and `resize2fs` to resize the partition/filesystem. Backing up the partition table before doing so would be better.
 

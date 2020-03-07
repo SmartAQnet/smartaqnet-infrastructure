@@ -39,8 +39,7 @@ wal_level = hot_standby
 archive_mode = on
 archive_command = 'cd .'
 max_wal_senders = 8
-wal_keep_segments = 24
-hot_standby = on
+wal_keep_segments = 256
 vacuum_defer_cleanup_age = 20
 EOF
 }
@@ -61,12 +60,15 @@ standby_mode = on
 primary_conninfo = '${PG_CONN_STRING}'
 trigger_file = '${PGDATA}/promote_master_touch'
 EOF
+  sed -i -r -e"s/^#?shared_buffers =.*$/shared_buffers = 2GB/" ${PGDATA}/postgresql.conf
+  sed -i -r -e"s/^#?work_mem =.*$/work_mem = 16MB/" ${PGDATA}/postgresql.conf
   #sed -i 's/wal_level = hot_standby/wal_level = replica/g'
 }
 
 enable_postgresql_replication_feedback() {
   FILE="${PGDATA}/postgresql.conf"
   cat >> ${FILE} <<EOF
+hot_standby = on
 hot_standby_feedback = on
 EOF
 }
