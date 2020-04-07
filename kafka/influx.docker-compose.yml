@@ -1,0 +1,60 @@
+version: '3'
+services:
+  influxdb:
+    image: influxdb:latest
+    ports:
+      - '18086:8086'
+    volumes:
+      - influxdb-storage:/var/lib/influxdb
+    environment:
+      - INFLUXDB_DB=db0
+      - INFLUXDB_ADMIN_USER=admin
+      - INFLUXDB_ADMIN_PASSWORD=ChangeMe
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+  chronograf:
+    image: chronograf:latest
+    ports:
+      - '18888:8888'
+    volumes:
+      - chronograf-storage:/var/lib/chronograf
+    depends_on:
+      - influxdb
+    environment:
+      - INFLUXDB_URL=http://influxdb:8086
+      - INFLUXDB_USERNAME=admin
+      - INFLUXDB_PASSWORD=ChangeMe
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - '13000:3000'
+    volumes:
+      - grafana-storage:/var/lib/grafana
+      - grafana-provisioning:/etc/grafana/provisioning
+    depends_on:
+      - influxdb
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=ChangeMe
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+volumes:
+  influxdb-storage:
+  chronograf-storage:
+  grafana-storage:
+  grafana-provisioning:

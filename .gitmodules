@@ -1,0 +1,3 @@
+[submodule "postgis/timescaledb-docker"]
+	path = postgis/timescaledb-docker
+	url = https://github.com/timescale/timescaledb-docker

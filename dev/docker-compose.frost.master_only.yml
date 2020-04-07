@@ -1,0 +1,8 @@
+version: '3'
+services:
+  write:
+    deploy:
+      labels:
+        - 'traefik.http.routers.frostwriteapis.rule=Host(`${HOST_NAME}`) && PathPrefix (`/v1.0`)'
+        - 'traefik.http.routers.frostwriteapi.rule=Host(`${HOST_NAME}`) && PathPrefix (`/v1.0`)'
+        

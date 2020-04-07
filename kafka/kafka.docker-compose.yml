@@ -1,0 +1,32 @@
+version: '3'
+services:
+    kafka:
+        image: landoop/fast-data-dev
+        deploy:
+            mode: replicated
+            replicas: 1
+            placement:
+                constraints:
+                - node.role == manager
+        environment:
+            - SAMPLEDATA=0
+            - RUNTESTS=0
+            - ADV_HOST=129.13.170.69
+            - ZK_PORT=12181
+            - WEB_PORT=13030
+            - REGISTRY_PORT=18081
+            - REST_PORT=18082
+            - CONNECT_PORT=18083
+            - BROKER_PORT=19092
+        ports:
+            - 13030:13030 #Web Server
+            #- 13031:13031 #
+            - 18081:18081 #Schema Registry
+            - 18082:18082 #Kafka REST Proxy
+            - 18083:18083 #Kafka Connect Distributed
+            - 12181:12181 #ZooKeeper
+            - 19092:19092 #Kafka Broker
+        volumes:
+            - kafka-storage:/data
+volumes:
+  kafka-storage:

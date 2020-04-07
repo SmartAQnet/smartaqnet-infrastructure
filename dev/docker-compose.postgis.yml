@@ -1,8 +1,8 @@
 version: '3.2'
 services:
   master:
-    image: swarm-manager-1:5000/smartaqnet/postgis:9.5-alpine
+    image: swarm-manager-1:5000/timescale/timescaledb-postgis:1.6.0-pg11
     build: ../postgis
   replica:
-    image: swarm-manager-1:5000/smartaqnet/postgis:9.5-alpine
+    image: swarm-manager-1:5000/timescale/timescaledb-postgis:1.6.0-pg11
     build: ../postgis

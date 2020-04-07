@@ -29,3 +29,4 @@ docker stack deploy -c ./frost/docker-compose.yml frost
 docker stack deploy -c ./faas/docker-compose.yml -c ./faas/docker-compose.traefik.yml faas
 docker stack deploy --with-registry-auth -c <( replace_registry ./netdata/docker-compose.yml ) netdata
 docker stack deploy -c ./portainer/docker-compose.yml portainer
+docker stack deploy -c ./kafka/kafka.docker-compose.yml -c ./kafka/influx.docker-compose.yml kafka

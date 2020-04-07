@@ -1,7 +1,7 @@
 version: '3.2'
 services:
   master:
-    image: registry.teco.edu/smartaqnet/postgis:9.5-alpine
+    image: registry.teco.edu/smartaqnet/timescaledb-postgis:1.6.0-pg11
     build: .
     environment:
       - POSTGRES_DB=sensorthings
@@ -10,8 +10,12 @@ services:
       - POSTGRES_REPLICATION_USER=replication
       - POSTGRES_REPLICATION_PASSWORD=ChangeMe
       - POSTGRES_REPLICATION_MASTER=true
+      - POSTGRES_TIMEOUT_USER=sensorthings_timeout
+      - POSTGRES_TIMEOUT_PASSWORD=ChangeMe
+      - POSTGRES_TIMEOUT_MILLISECONDS=600000
     volumes:
       - 'master:/var/lib/postgresql/data:rw'
+      - '/dev/shm:/dev/shm'
     networks:
       - traefik
     ports:
@@ -19,6 +23,7 @@ services:
         published: 15432
         protocol: tcp
         mode: host
+    shm_size: 512MB
     deploy:
       mode: replicated
       replicas: 1
@@ -32,9 +37,13 @@ services:
         - 'traefik.tcp.routers.psqlm.rule=HostSNI(`*`)'
         - 'traefik.tcp.routers.psqlm.service=psqlm@docker'
         - 'traefik.tcp.services.psqlm.loadbalancer.server.port=5432'
+    entrypoint: "/bin/bash"
+    command:
+      - "-c"
+      - "timescaledb-tune --yes; bash docker-entrypoint.sh postgres"
   replica:
     build: .
-    image: registry.teco.edu/smartaqnet/postgis:9.5-alpine
+    image: registry.teco.edu/smartaqnet/timescaledb-postgis:1.6.0-pg11
     ports:
       - target: 5432
         published: 15432
@@ -47,8 +56,12 @@ services:
       - POSTGRES_REPLICATION_USER=replication
       - POSTGRES_REPLICATION_PASSWORD=ChangeMe
       - POSTGRES_REPLICATION_MASTER_HOST=master
+      - POSTGRES_TIMEOUT_USER=sensorthings_timeout
+      - POSTGRES_TIMEOUT_PASSWORD=ChangeMe
+      - POSTGRES_TIMEOUT_MILLISECONDS=600000
     volumes:
       - 'replica:/var/lib/postgresql/data:rw'
+      - '/dev/shm:/dev/shm'
     networks:
       - traefik
     deploy:
@@ -57,6 +70,10 @@ services:
         constraints:
           - node.role == worker
           - node.labels.postgis == replica
+    entrypoint: "/bin/bash"
+    command:
+      - "-c"
+      - "timescaledb-tune --yes; bash docker-entrypoint.sh postgres"
 volumes:
   master:
   replica:

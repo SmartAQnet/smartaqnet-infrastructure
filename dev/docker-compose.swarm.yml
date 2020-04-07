@@ -38,6 +38,7 @@ services:
       - "5000:5000"
       - "8081:8081"
       - "19999:19999"
+      - "9000:9000"
     privileged: true
     volumes:
       - "/lib/modules:/lib/modules:ro"

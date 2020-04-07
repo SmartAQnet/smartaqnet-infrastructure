@@ -1,20 +1,26 @@
 version: '3'
 services:
   write:
-    image: fraunhoferiosb/frost-server:1.9
+    image: fraunhoferiosb/frost-server-http:1.11.1
     environment:
       - serviceRootUrl=https://${HOST_NAME}
+      - bus_mqttBroker=tcp://mosquitto:1883
+      - bus_busImplementationClass=de.fraunhofer.iosb.ilt.sta.messagebus.MqttMessageBus
       - persistence_persistenceManagerImplementationClass=de.fraunhofer.iosb.ilt.sta.persistence.postgres.stringid.PostgresPersistenceManagerString
       - persistence_idGenerationMode=ServerAndClientGenerated
       - persistence_db_driver=org.postgresql.Driver
       - persistence_db_url=jdbc:postgresql://postgis_master:5432/sensorthings
       - persistence_db_username=sensorthings
       - persistence_db_password=ChangeMe
+      - persistence_autoUpdateDatabase=true
       - http_cors_enable=true
+      - http_cors_allowed_origins=*
+      - http_cors_allowed_methods=HEAD,POST,GET,OPTIONS,PATCH
       - defaultTop=1000
       - maxTop=2147483647
     networks:
       - traefik
+      - mqtt-broker
     deploy:
       mode: global
       placement:
@@ -24,26 +30,19 @@ services:
       labels:
         - 'traefik.enable=true'
         - 'traefik.http.services.frostwriteapi.loadbalancer.server.port=8080'
-        - 'traefik.http.services.frostwritews.loadbalancer.server.port=9876'
-        - 'traefik.http.services.frostwritews.loadbalancer.sticky=true'
-        - 'traefik.http.services.frostwritews.loadbalancer.sticky.cookie.name=frostwritewsstickycookie'  
         - 'traefik.http.middlewares.frostwrite_addprefix.addprefix.prefix=/FROST-Server'
         - 'traefik.http.middlewares.frostwrite_redirectregex.redirectregex.regex=^(.*)'
         - 'traefik.http.middlewares.frostwrite_redirectregex.redirectregex.replacement=https://smartaqnet.github.io/'
         - 'traefik.http.middlewares.frostwrite_redirectregex.redirectregex.permanent=true'
-        - 'traefik.http.routers.frostwriteapis.rule=Host(`${HOST_NAME}`) && PathPrefix (`/v1.0`) && (Method(`POST`) || Method(`PATCH`))'
+        - 'traefik.http.middlewares.secured-frost.chain.middlewares=auth-users-frost,frostwrite_addprefix'
+        - 'traefik.http.middlewares.auth-users-frost.basicauth.users=sensorthings:$$2y$$05$$HzOPyZ6qBobko1JuSma6SeppOnO6sNK4uO1/8/zT7A.bD9aRPiRHC'
+        - 'traefik.http.routers.frostwriteapis.rule=Host(`${HOST_NAME}`) && PathPrefix (`/v1.0`) && (Method(`POST`) || Method(`PATCH`) || Method(`OPTIONS`))'
         - 'traefik.http.routers.frostwriteapis.middlewares=frostwrite_addprefix@docker'
         - 'traefik.http.routers.frostwriteapis.entrypoints=https'
         - 'traefik.http.routers.frostwriteapis.service=frostwriteapi@docker'
         - 'traefik.http.routers.frostwriteapis.tls=true'
         - 'traefik.http.routers.frostwriteapis.tls.certresolver=le'
         - 'traefik.http.routers.frostwriteapis.priority=3'
-        - 'traefik.http.routers.frostwritewss.rule=Host(`${HOST_NAME}`) && PathPrefix(`/mqtt`)'
-        - 'traefik.http.routers.frostwritewss.entrypoints=https'
-        - 'traefik.http.routers.frostwritewss.service=frostwritews@docker'
-        - 'traefik.http.routers.frostwritewss.tls=true'
-        - 'traefik.http.routers.frostwritewss.tls.certresolver=le'
-        - 'traefik.http.routers.frostwritewss.priority=2'
         - 'traefik.http.routers.frostwriteredirects.rule=Host(`${HOST_NAME}`)'
         - 'traefik.http.routers.frostwriteredirects.middlewares=frostwrite_redirectregex@docker'
         - 'traefik.http.routers.frostwriteredirects.entrypoints=https'
@@ -51,39 +50,97 @@ services:
         - 'traefik.http.routers.frostwriteredirects.tls=true'
         - 'traefik.http.routers.frostwriteredirects.tls.certresolver=le'
         - 'traefik.http.routers.frostwriteredirects.priority=1'
-        - 'traefik.http.routers.frostwriteapi.rule=Host(`${HOST_NAME}`) && PathPrefix(`/v1.0`) && (Method(`POST`) || Method(`PATCH`))'
+        - 'traefik.http.routers.frostwriteapi.rule=Host(`${HOST_NAME}`) && PathPrefix (`/v1.0`) && (Method(`POST`) || Method(`PATCH`) || Method(`OPTIONS`))'
         - 'traefik.http.routers.frostwriteapi.middlewares=frostwrite_addprefix@docker'
         - 'traefik.http.routers.frostwriteapi.entrypoints=http'
         - 'traefik.http.routers.frostwriteapi.service=frostwriteapi@docker'
         - 'traefik.http.routers.frostwriteapi.priority=3'
-        - 'traefik.http.routers.frostwritews.rule=Host(`${HOST_NAME}`) && PathPrefix(`/mqtt`)'
-        - 'traefik.http.routers.frostwritews.entrypoints=http'
-        - 'traefik.http.routers.frostwritews.service=frostwritews@docker'
-        - 'traefik.http.routers.frostwritews.priority=2'
         - 'traefik.http.routers.frostwriteredirect.rule=Host(`${HOST_NAME}`)'
         - 'traefik.http.routers.frostwriteredirect.middlewares=frostwrite_redirectregex@docker'
         - 'traefik.http.routers.frostwriteredirect.entrypoints=http'
         - 'traefik.http.routers.frostwriteredirect.service=frostwriteapi@docker'
         - 'traefik.http.routers.frostwriteredirect.priority=1'
+        - 'traefik.http.routers.frostwriteapis-delete.rule=Host(`${HOST_NAME}`) && PathPrefix (`/v1.0`) && Method(`DELETE`)'
+        - 'traefik.http.routers.frostwriteapis-delete.middlewares=secured-frost@docker'
+        - 'traefik.http.routers.frostwriteapis-delete.entrypoints=https'
+        - 'traefik.http.routers.frostwriteapis-delete.service=frostwriteapi@docker'
+        - 'traefik.http.routers.frostwriteapis-delete.tls=true'
+        - 'traefik.http.routers.frostwriteapis-delete.tls.certresolver=le'
+        - 'traefik.http.routers.frostwriteapis-delete.priority=4'
+
+
+  mqtt:
+    image: fraunhoferiosb/frost-server-mqtt:1.11.1
+    networks:
+      - traefik
+      - mqtt-broker
+    environment:
+      - serviceRootUrl=https://${HOST_NAME}
+      - bus_busImplementationClass=de.fraunhofer.iosb.ilt.sta.messagebus.MqttMessageBus
+      - bus_mqttBroker=tcp://mosquitto:1883
+      - mqtt_CreateThreadPoolSize=10
+      - mqtt_CreateMessageQueueSize=100
+      - mqtt_SubscribeThreadPoolSize=20
+      - mqtt_SubscribeMessageQueueSize=1000
+      - persistence_persistenceManagerImplementationClass=de.fraunhofer.iosb.ilt.sta.persistence.postgres.stringid.PostgresPersistenceManagerString
+      - persistence_db_driver=org.postgresql.Driver
+      - persistence_db_url=jdbc:postgresql://postgis_master:5432/sensorthings
+      - persistence_db_username=sensorthings
+      - persistence_db_password=ChangeMe
+    deploy:
+      mode: global
+      placement:
+        constraints:
+          - node.role == worker
+          - node.labels.postgis == master
+      labels:
+        - 'traefik.enable=true'
+        - 'traefik.http.services.frostwritews.loadbalancer.server.port=9876'
+        - 'traefik.http.services.frostwritews.loadbalancer.sticky=true'
+        - 'traefik.http.services.frostwritews.loadbalancer.sticky.cookie.name=frostwritewsstickycookie'
+        - 'traefik.http.routers.frostwritewss.rule=Host(`${HOST_NAME}`) && PathPrefix(`/mqtt`)'
+        - 'traefik.http.routers.frostwritewss.entrypoints=https'
+        - 'traefik.http.routers.frostwritewss.service=frostwritews@docker'
+        - 'traefik.http.routers.frostwritewss.tls=true'
+        - 'traefik.http.routers.frostwritewss.tls.certresolver=le'
+        - 'traefik.http.routers.frostwritewss.priority=2'
+        - 'traefik.http.routers.frostwritews.rule=Host(`${HOST_NAME}`) && PathPrefix(`/mqtt`)'
+        - 'traefik.http.routers.frostwritews.entrypoints=http'
+        - 'traefik.http.routers.frostwritews.service=frostwritews@docker'
+        - 'traefik.http.routers.frostwritews.priority=2'
         - 'traefik.tcp.services.frostmqtt.loadbalancer.server.port=1883'
         - 'traefik.tcp.routers.frostmqtt.entrypoints=mqtt'
         - 'traefik.tcp.routers.frostmqtt.rule=HostSNI(`*`)'
         - 'traefik.tcp.routers.frostmqtt.service=frostmqtt@docker'
+  mosquitto:
+    image: eclipse-mosquitto
+    networks:
+      - mqtt-broker
+    deploy:
+      mode: global
+      placement:
+        constraints:
+          - node.role == worker
+          - node.labels.postgis == master
   read:
-    image: fraunhoferiosb/frost-server:1.9
+    image: fraunhoferiosb/frost-server-http:1.11.1
     environment:
       - serviceRootUrl=https://${HOST_NAME}
       - persistence_persistenceManagerImplementationClass=de.fraunhofer.iosb.ilt.sta.persistence.postgres.stringid.PostgresPersistenceManagerString
       - persistence_idGenerationMode=ServerAndClientGenerated
       - persistence_db_driver=org.postgresql.Driver
       - persistence_db_url=jdbc:postgresql://postgis_replica:5432/sensorthings
-      - persistence_db_username=sensorthings
+      - persistence_db_username=sensorthings_timeout
       - persistence_db_password=ChangeMe
+      - mqtt_Enabled=false
+      - bus_mqttBroker=tcp://mosquitto:1883
       - http_cors_enable=true
+      - http_cors_allowed_origins=*
       - defaultTop=1000
       - maxTop=2147483647
     networks:
       - traefik
+      - mqtt-broker
     deploy:
       mode: global
       placement:
@@ -110,3 +167,5 @@ networks:
   traefik:
     external:
       name: 'traefik_network'
+  mqtt-broker:
+    external: false
