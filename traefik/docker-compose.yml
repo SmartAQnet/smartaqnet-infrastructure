@@ -9,6 +9,8 @@ services:
       - '--log=true'
       - '--log.level=INFO'
       - '--accesslog=true'
+      - '--accesslog.fields.headers.names.User-Agent=keep'
+      - '--accesslog.fields.names.ClientAddr=keep'
       - '--global.checknewversion=true'
       - '--global.sendanonymoususage=false'
       - '--entrypoints.http.address=:80'

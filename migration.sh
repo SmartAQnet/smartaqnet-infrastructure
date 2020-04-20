@@ -41,53 +41,53 @@ ssh $REMOTE_SSH -i $IDENTITY_FILE docker exec -i $REMOTE_DOCKER_CONTAINER psql -
 
 #Import Observations
 echo "Import Observations"
-#ssh $REMOTE_SSH -i $IDENTITY_FILE docker exec -i $REMOTE_DOCKER_CONTAINER psql --username sensorthings -c "\"\\COPY (SELECT * FROM \\\"OBSERVATIONS\\\" where \\\"OBSERVATIONS\\\".\\\"PHENOMENON_TIME_END\\\" < '$IMPORT_END_DATE') TO STDOUT DELIMITER ',' CSV\"" | pv |docker exec -i $LOCAL_DOCKER_CONTAINER timescaledb-parallel-copy --connection "host=localhost user=sensorthings sslmode=disable password=ChangeMe" --db-name sensorthings --table OBSERVATIONS --workers $IMPORT_WORKERS --copy-options "CSV"
+ssh $REMOTE_SSH -i $IDENTITY_FILE docker exec -i $REMOTE_DOCKER_CONTAINER psql --username sensorthings -c "\"\\COPY (SELECT * FROM \\\"OBSERVATIONS\\\" where \\\"OBSERVATIONS\\\".\\\"PHENOMENON_TIME_END\\\" < '$IMPORT_END_DATE') TO STDOUT DELIMITER ',' CSV\"" | pv |docker exec -i $LOCAL_DOCKER_CONTAINER timescaledb-parallel-copy --connection "host=localhost user=sensorthings sslmode=disable password=ChangeMe" --db-name sensorthings --table OBSERVATIONS --workers $IMPORT_WORKERS --copy-options "CSV"
 
 #Create indices on Observation table
 echo "Create indices on Observation table"
 docker exec -i $LOCAL_DOCKER_CONTAINER psql --username sensorthings <<-EOSQL
-    CREATE INDEX "OBSERVATIONS_DATASTREAM_ID_NEW" ON public."OBSERVATIONS" USING btree ("DATASTREAM_ID");
-    CREATE INDEX "OBSERVATIONS_FEATURE_ID_NEW" ON public."OBSERVATIONS" USING btree ("FEATURE_ID");
-    CREATE INDEX "OBSERVATIONS_PKEY_NEW" ON public."OBSERVATIONS" USING btree ("ID");
-    CREATE INDEX observations_filter_datastream_in_time_range_new ON public."OBSERVATIONS" USING btree ("PHENOMENON_TIME_START" DESC, "PHENOMENON_TIME_END" DESC, "DATASTREAM_ID");
-    CREATE INDEX observations_phenomenon_time_end_idx_new ON public."OBSERVATIONS" USING btree ("PHENOMENON_TIME_END");
-    CREATE INDEX observations_result_time_idx_new ON public."OBSERVATIONS" USING btree ("RESULT_TIME");
+   CREATE INDEX "OBSERVATIONS_DATASTREAM_ID_NEW" ON public."OBSERVATIONS" USING btree ("DATASTREAM_ID");
+   CREATE INDEX "OBSERVATIONS_FEATURE_ID_NEW" ON public."OBSERVATIONS" USING btree ("FEATURE_ID");
+   CREATE INDEX "OBSERVATIONS_PKEY_NEW" ON public."OBSERVATIONS" USING btree ("ID");
+   CREATE INDEX observations_filter_datastream_in_time_range_new ON public."OBSERVATIONS" USING btree ("PHENOMENON_TIME_START" DESC, "PHENOMENON_TIME_END" DESC, "DATASTREAM_ID");
+   CREATE INDEX observations_phenomenon_time_end_idx_new ON public."OBSERVATIONS" USING btree ("PHENOMENON_TIME_END");
+   CREATE INDEX observations_result_time_idx_new ON public."OBSERVATIONS" USING btree ("RESULT_TIME");
 EOSQL
 
 #Create foreign keys on Observation table
 echo "Create foreign keys on Observation table"
 docker exec -i $LOCAL_DOCKER_CONTAINER psql --username sensorthings <<-EOSQL
-    --ALTER TABLE public."OBSERVATIONS" ADD CONSTRAINT observations_new_fk FOREIGN KEY ("DATASTREAM_ID") REFERENCES "DATASTREAMS"("ID") ON UPDATE CASCADE ON DELETE CASCADE;
+    ALTER TABLE public."OBSERVATIONS" ADD CONSTRAINT observations_new_fk FOREIGN KEY ("DATASTREAM_ID") REFERENCES "DATASTREAMS"("ID") ON UPDATE CASCADE ON DELETE CASCADE;
     ALTER TABLE public."OBSERVATIONS" ADD CONSTRAINT observations_new_fk2 FOREIGN KEY ("FEATURE_ID") REFERENCES "FEATURES"("ID") ON UPDATE CASCADE ON DELETE CASCADE;
 EOSQL
 
 #Create unique id,time constraint on Observation table
 echo "Create unique id,time constraint on Observation table"
 docker exec -i $LOCAL_DOCKER_CONTAINER psql --username sensorthings <<-EOSQL
-    ALTER TABLE public."OBSERVATIONS" ADD CONSTRAINT observations_un UNIQUE ("ID","PHENOMENON_TIME_START");
+   ALTER TABLE public."OBSERVATIONS" ADD CONSTRAINT observations_un UNIQUE ("ID","PHENOMENON_TIME_START");
 EOSQL
 
 #Create triggers for 'OBSERVATIONS' table
 echo "Create triggers for 'OBSERVATIONS' table"
 docker exec -i $LOCAL_DOCKER_CONTAINER psql --username sensorthings <<-EOSQL
-    create trigger datastreams_actualization_delete after
-    delete
-        on
-        public."OBSERVATIONS" for each row execute procedure datastreams_update_delete();
+   create trigger datastreams_actualization_delete after
+   delete
+       on
+       public."OBSERVATIONS" for each row execute procedure datastreams_update_delete();
 
-    create trigger datastreams_actualization_insert after
-    insert
-        on
-        public."OBSERVATIONS" for each row execute procedure datastreams_update_insert();
+   create trigger datastreams_actualization_insert after
+   insert
+       on
+       public."OBSERVATIONS" for each row execute procedure datastreams_update_insert();
 
-    create trigger datastreams_actualization_update after
-    update
-        on
-        public."OBSERVATIONS" for each row execute procedure datastreams_update_update();
+   create trigger datastreams_actualization_update after
+   update
+       on
+       public."OBSERVATIONS" for each row execute procedure datastreams_update_update();
 EOSQL
 
 #deactivate synchronous_commit
 echo "deactivate synchronous_commit"
 docker exec -i $LOCAL_DOCKER_CONTAINER psql --username sensorthings <<-EOSQL
-    alter system set synchronous_commit= 'off';
+   alter system set synchronous_commit= 'off';
 EOSQL

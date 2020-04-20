@@ -13,6 +13,10 @@ docker stack deploy -c ./traefik/docker-compose.yml traefik
 
 #sleep 15
 
+cd postgis
+./deploy_timescaledb-oss.sh
+cd ..
+
 docker-compose -f ./postgis/docker-compose.yml build
 docker-compose -f ./postgis/docker-compose.yml push
 docker-compose -f ./netdata/docker-compose.yml build

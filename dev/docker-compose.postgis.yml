@@ -1,8 +1,15 @@
 version: '3.2'
 services:
   master:
-    image: swarm-manager-1:5000/timescale/timescaledb-postgis:1.6.0-pg11
-    build: ../postgis
+    image: swarm-manager-1:5001/timescale/timescaledb-postgis:1.6.0-pg11
+    build: 
+      context: ../postgis
+      args:
+        - BASE_IMAGE=swarm-manager-1:5001/smartaqnet/timescaledb-postgis:1.6.1-pg11-oss
+
   replica:
-    image: swarm-manager-1:5000/timescale/timescaledb-postgis:1.6.0-pg11
-    build: ../postgis
+    image: swarm-manager-1:5001/timescale/timescaledb-postgis:1.6.0-pg11
+    build:
+      context: ../postgis
+      args:
+        - BASE_IMAGE=swarm-manager-1:5001/smartaqnet/timescaledb-postgis:1.6.1-pg11-oss
