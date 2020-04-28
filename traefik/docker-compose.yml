@@ -23,7 +23,8 @@ services:
       - '--certificatesresolvers.le.acme.email=unixadmin@teco.edu'
       - '--certificatesresolvers.le.acme.storage=/etc/traefik/acme/acme.json'
       - '--certificatesresolvers.le.acme.httpchallenge.entrypoint=http'
-      - '--certificatesresolvers.le.acme.caserver=https://acme-staging-v02.api.letsencrypt.org/directory' # TODO: REMOVE LATER!!
+      #- '--certificatesresolvers.le.acme.caserver=https://acme-staging-v02.api.letsencrypt.org/directory' # DEBUG ONLY
+      - '--certificatesresolvers.le.acme.caserver=https://acme-v02.api.letsencrypt.org/directory'
       - '--providers.docker=true'
       - '--providers.docker.swarmmode=true'
       - '--providers.docker.watch=true'
