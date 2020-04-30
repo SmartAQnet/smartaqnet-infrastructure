@@ -1,4 +1,4 @@
-version: "3"
+version: "3.8"
 services:
   netdata:
     image: registry.teco.edu/smartaqnet/netdata:v1.19.0
@@ -14,6 +14,12 @@ services:
         constraints:
           - node.role == worker
           - node.labels.postgis == master
+    configs:
+      - source: health_alarm_notify
+        target: /etc/netdata/health_alarm_notify.conf
+    secrets:
+      - telegram_bot_token
+      - default_recipient_telegram
     ports:
       - 19999:19999
     volumes:
@@ -50,3 +56,12 @@ networks:
   traefik:
     external:
       name: 'traefik_network'
+configs:
+  health_alarm_notify:
+    file: ./health_alarm_notify.conf
+    template_driver: golang
+secrets:
+  telegram_bot_token:
+    file: ./secrets/TELEGRAM_BOT_TOKEN
+  default_recipient_telegram:
+    file: ./secrets/DEFAULT_RECIPIENT_TELEGRAM

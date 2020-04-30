@@ -19,16 +19,27 @@ cd postgis
 ./deploy_timescaledb-oss.sh
 cd ..
 
+#Before executing this file, please follow the instructions in netdata/secrets/README
+
 #Build and push postgis and netdata to the TECO docker registry
 docker-compose -f ./postgis/docker-compose.yml build
 docker-compose -f ./postgis/docker-compose.yml push
-docker-compose -f ./netdata/docker-compose.yml build
-docker-compose -f ./netdata/docker-compose.yml push
+
+
+#Create empty secret files for telegram bot
+touch ./netdata/secrets/TELEGRAM_BOT_TOKEN
+touch ./netdata/secrets/DEFAULT_RECIPIENT_TELEGRAM
+
+docker-compose -f ./netdata/docker-compose.yml -f ./netdata/docker-compose.secrets.yml build
+docker-compose -f ./netdata/docker-compose.yml -f ./netdata/docker-compose.secrets.yml push
+
+docker stack rm netdata
+docker config create --template-driver golang netdata_health_alarm_notify ./netdata/health_alarm_notify.conf
 
 #Deploys all stacks to the cluster
 docker stack deploy --with-registry-auth -c ./postgis/docker-compose.yml postgis
 docker stack deploy -c ./frost/docker-compose.yml frost
 docker stack deploy -c ./faas/docker-compose.yml -c ./faas/docker-compose.traefik.yml faas
-docker stack deploy --with-registry-auth -c ./netdata/docker-compose.yml netdata
+docker stack deploy --with-registry-auth -c ./netdata/docker-compose.yml -c ./netdata/docker-compose.secrets.yml netdata
 docker stack deploy -c ./portainer/docker-compose.yml portainer
 docker stack deploy -c ./kafka/kafka.docker-compose.yml -c ./kafka/influx.docker-compose.yml kafka
