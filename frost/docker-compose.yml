@@ -71,8 +71,6 @@ services:
 
   mqtt:
     image: fraunhoferiosb/frost-server-mqtt:1.11.1
-    tmpfs:
-      - /tmp
     networks:
       - traefik
       - mqtt-broker
@@ -89,6 +87,11 @@ services:
       - persistence_db_url=jdbc:postgresql://postgis_master:5432/sensorthings
       - persistence_db_username=sensorthings
       - persistence_db_password=ChangeMe
+    volumes:
+      - type: tmpfs
+        target: /tmp
+        tmpfs:
+          size: 4294967296 # 4GiB
     deploy:
       mode: global
       placement:
