@@ -1,4 +1,4 @@
-version: '3'
+version: '3.6' # This needs to be at leas 3.6 otherwise the tmpfs will not work
 services:
   write:
     image: fraunhoferiosb/frost-server-http:1.11.1
@@ -87,6 +87,11 @@ services:
       - persistence_db_url=jdbc:postgresql://postgis_master:5432/sensorthings
       - persistence_db_username=sensorthings
       - persistence_db_password=ChangeMe
+    volumes:
+      - type: tmpfs
+        target: /tmp
+        tmpfs:
+          size: 4294967296 # 4GiB
     deploy:
       mode: global
       placement:
